@@ -4,11 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Woofmen 汪們毛孩沙龍所 | 桃園青埔日系寵物美容</title>
-    
     <link rel="icon" href="logo.png" type="image/png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
 
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -20,14 +19,14 @@
                 extend: {
                     colors: {
                         theme: {
-                            bg: '#FAF8F5',
-                            primary: '#A9C2CE',
-                            primaryDeep: '#84A0AE',
-                            brown: '#967E76',
-                            text: '#7D6D61',
-                            textDeep: '#5D504A',
-                            cardBorder: '#EAE5E2',
-                            accent: '#FADCD2',
+                            bg: '#FBF9F6', 
+                            brown: '#A68A7C',
+                            brownDeep: '#8D6E63',
+                            yellow: '#E6C88A',
+                            yellowLight: '#F5E9D0',
+                            blue: '#B5CAD4',
+                            text: '#7C604E',
+                            sub: '#A9998E',
                         }
                     },
                     fontFamily: {
@@ -35,22 +34,23 @@
                         serif: ['"Zen Maru Gothic"', 'serif'],
                     },
                     boxShadow: {
-                        'cute': '4px 4px 0px 0px var(--tw-color-theme-primary)',
-                        'cute-hover': '6px 6px 0px 0px var(--tw-color-theme-primaryDeep)',
-                        'cute-sm': '3px 3px 0px 0px #DCD5D1',
-                        'cute-sm-hover': '4px 4px 0px 0px #CEC6C1',
+                        'cute': '4px 4px 0px 0px #D6C6BA',
+                        'cute-hover': '6px 6px 0px 0px #C9B6A9',
+                        'cute-sm': '3px 3px 0px 0px #D6C6BA',
+                        'cute-sm-hover': '4px 4px 0px 0px #C9B6A9',
+                    },
+                    backgroundImage: {
+                        'gradient-brand': 'linear-gradient(135deg, #B39A8C 0%, #E6C88A 100%)',
                     },
                     animation: {
                         'fade-in': 'fadeIn 0.8s ease-out forwards',
                         'slide-up': 'slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
-                        'float': 'float 5s ease-in-out infinite',
-                        'drift': 'drift 8s ease-in-out infinite',
+                        'float': 'float 4s ease-in-out infinite',
                     },
                     keyframes: {
                         fadeIn: { from: { opacity: '0' }, to: { opacity: '1' } },
                         slideUp: { from: { opacity: '0', transform: 'translateY(40px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
-                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-8px)' } },
-                        drift: { '0%, 100%': { transform: 'translate(0,0)' }, '50%': { transform: 'translate(12px,-12px)' } },
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
                     }
                 }
             }
@@ -59,20 +59,18 @@
 
     <style>
         body { 
-            background-color: var(--tw-color-theme-bg);
+            background-color: #FBF9F6;
             background-image: 
-                radial-gradient(circle at 15% 25%, rgba(169, 194, 206, 0.25) 0%, transparent 40%),
-                radial-gradient(circle at 85% 75%, rgba(150, 126, 118, 0.1) 0%, transparent 40%);
+                radial-gradient(circle at 10% 20%, rgba(179, 154, 140, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(230, 200, 138, 0.1) 0%, transparent 40%);
             font-family: 'Zen Maru Gothic', sans-serif;
-            color: var(--tw-color-theme-text);
+            color: #7C604E;
             -webkit-font-smoothing: antialiased;
         }
         
         .card-panel {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 2px solid var(--tw-color-theme-primaryDeep);
+            background: #FFFCF7;
+            border: 2px solid #D6C6BA;
             box-shadow: var(--tw-shadow-cute);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -82,133 +80,134 @@
         }
 
         .btn-card {
-            background: #FFFFFF;
-            border: 2px solid var(--tw-color-theme-cardBorder);
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid #EAE2D9;
             box-shadow: var(--tw-shadow-cute-sm);
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .btn-card:hover {
-            border-color: var(--tw-color-theme-primary);
+            background: #fff;
+            border-color: #B39A8C;
             transform: translate(-2px, -2px);
             box-shadow: var(--tw-shadow-cute-sm-hover);
         }
-        .btn-card:active { transform: translate(1px, 1px); box-shadow: 2px 2px 0px 0px #DCD5D1; }
 
-        /* ✅ 漂浮品牌元素 */
-        .floating-elements {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            overflow: hidden;
-            pointer-events: none;
+        .reveal-item {
+            opacity: 0;
+            animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
-        .float-item {
-            position: absolute;
-            opacity: 0.4;
-            animation: float 6s ease-in-out infinite, drift 10s ease-in-out infinite;
-        }
-        .bubble {
-            border: 2px solid rgba(169,194,206,0.5);
-            background: rgba(169,194,206,0.15);
-            border-radius: 9999px;
-        }
-        .star {
-            width: 26px;
-            height: 26px;
-            background: rgba(250,220,210,0.75);
-            clip-path: polygon(50% 0%, 61% 38%, 100% 38%, 68% 59%, 79% 100%, 50% 75%, 21% 100%, 32% 59%, 0% 38%, 39% 38%);
-        }
+
+.float-layer{
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+    pointer-events:none;
+    z-index:0;
+}
+.bubble{
+    position:absolute;
+    border-radius:9999px;
+    background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.7), rgba(230,200,138,0.15));
+    border:1px solid rgba(179,154,140,0.25);
+    box-shadow:0 8px 20px rgba(166,138,124,0.08);
+    animation: float 7s ease-in-out infinite;
+}
+.star{
+    position:absolute;
+    color:rgba(179,154,140,0.35);
+    animation: float 6s ease-in-out infinite, twinkle 3.5s ease-in-out infinite;
+}
+@keyframes twinkle{
+    0%,100%{opacity:.4; transform:scale(.9);}
+    50%{opacity:1; transform:scale(1.1);}
+}
     </style>
 </head>
 
 <body class="min-h-screen relative flex flex-col items-center justify-center p-4">
 
-    <!-- ✅ 漂浮泡泡 & 星星 -->
-    <div class="floating-elements">
-        <div class="float-item bubble w-20 h-20 top-[10%] left-[8%] animate-float"></div>
-        <div class="float-item bubble w-14 h-14 top-[60%] left-[5%] animate-float" style="animation-duration:7s;"></div>
-        <div class="float-item bubble w-24 h-24 top-[20%] right-[10%] animate-float" style="animation-duration:8s;"></div>
-        <div class="float-item bubble w-10 h-10 bottom-[15%] right-[20%] animate-float" style="animation-duration:6.5s;"></div>
+    <!-- ✅ 漂浮品牌元素 -->
+<div class="float-layer">
+    <!-- bubbles -->
+    <div class="bubble w-20 h-20 top-8 left-8" style="animation-delay:0s;"></div>
+    <div class="bubble w-12 h-12 top-40 right-10" style="animation-delay:1s;"></div>
+    <div class="bubble w-28 h-28 bottom-20 left-[-20px]" style="animation-delay:2s;"></div>
+    <div class="bubble w-10 h-10 bottom-10 right-16" style="animation-delay:3s;"></div>
 
-        <div class="float-item star top-[12%] right-[40%]" style="animation-duration:9s;"></div>
-        <div class="float-item star bottom-[20%] left-[35%]" style="animation-duration:8s;"></div>
-        <div class="float-item star top-[55%] right-[12%]" style="animation-duration:7.5s;"></div>
-    </div>
-
+    <!-- stars -->
+    <i data-lucide="star" class="star w-6 h-6 top-16 right-24" style="animation-delay:.5s;"></i>
+    <i data-lucide="sparkles" class="star w-5 h-5 bottom-24 left-20" style="animation-delay:1.2s;"></i>
+    <i data-lucide="sparkle" class="star w-4 h-4 top-56 left-12" style="animation-delay:1.8s;"></i>
+</div>
     <main class="w-full max-w-lg mx-auto relative z-10 flex flex-col">
-
         <div class="flex flex-col justify-center min-h-[90vh] py-8">
-            
-            <!-- ✅ 主視覺先出現 -->
-            <div class="w-full card-panel rounded-[32px] p-8 sm:p-10 text-center relative overflow-hidden animate-slide-up z-20 mb-8 group"
-                 style="animation-delay:0s; opacity:0; animation-fill-mode:forwards;">
-                <div class="absolute -top-24 -right-24 w-64 h-64 bg-theme-primary/15 rounded-full blur-3xl"></div>
-                <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-theme-accent/10 rounded-full blur-3xl"></div>
+
+            <!-- ✅ 主視覺：最先載入 -->
+            <div class="w-full card-panel rounded-[32px] p-8 sm:p-10 text-center relative overflow-hidden animate-slide-up z-20 mb-8 group">
+                <div class="absolute -top-24 -right-24 w-64 h-64 bg-theme-brown/5 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-theme-yellow/5 rounded-full blur-3xl"></div>
 
                 <div class="relative z-10 mb-6 flex justify-center">
-                    <div class="w-56 h-56 animate-float">
+                    <div class="w-64 h-64 animate-float">
                          <img src="logo.png" alt="Woofmen 汪們 Logo" class="w-full h-full object-contain transform transition duration-700 group-hover:scale-110 group-hover:rotate-[-2deg]">
                     </div>
                 </div>
 
                 <div class="relative z-10 space-y-4 mb-10">
-                    <p class="text-sm text-theme-brown tracking-[0.2em] font-medium">
+                    <p class="text-sm text-theme-sub tracking-[0.2em] font-medium pt-1">
                         <span>🛁中壢青埔毛孩們專屬的沙龍所</span>
                     </p>
-                    <div class="h-0.5 w-16 bg-theme-primary/40 mx-auto rounded-full"></div>
                 </div>
                 
                 <div class="relative z-10">
-                    <a href="#" class="group relative block w-full rounded-2xl bg-theme-primary text-white font-bold text-lg tracking-[0.2em] py-4 px-6
-                                   border-2 border-theme-primaryDeep/50 hover:bg-theme-primaryDeep
-                                   transition-all duration-300 hover:-translate-y-1 active:translate-y-0 
-                                   shadow-[3px_3px_0px_0px_#84A0AE] hover:shadow-[4px_4px_0px_0px_#6E8A99] active:shadow-[2px_2px_0px_0px_#84A0AE]">
+                    <button class="group relative w-full rounded-2xl bg-theme-brown text-white font-bold text-lg tracking-[0.2em] py-4 px-6
+                                   shadow-cute-sm border-2 border-theme-brownDeep/50 hover:bg-theme-brownDeep
+                                   transition-all duration-300 hover:-translate-y-1 hover:shadow-cute-sm-hover active:translate-y-0 active:shadow-cute-sm">
                         <div class="flex items-center justify-center gap-3">
                             <i data-lucide="sparkles" class="w-5 h-5 text-white/80 group-hover:text-yellow-300 group-hover:scale-110 transition-all duration-300"></i>
                             <span>線上預約 & 服務</span>
                             <i data-lucide="chevron-right" class="w-4 h-4 text-white/60 group-hover:translate-x-1 transition-transform"></i>
                         </div>
-                    </a>
-                    <p class="text-xs text-theme-text mt-4 tracking-wider opacity-80 flex items-center justify-center gap-1.5">
+                    </button>
+                    <p class="text-xs text-theme-sub mt-4 tracking-wider opacity-80 flex items-center justify-center gap-1.5">
                         <i data-lucide="info" class="w-3.5 h-3.5"></i> 點擊了解我們的服務項目與流程
                     </p>
                 </div>
             </div>
 
-            <!-- ✅ 依序載入 -->
-            <div class="w-full space-y-3 animate-slide-up" style="animation-delay:0.15s; opacity:0; animation-fill-mode:forwards;">
-                
+            <!-- ✅ 依序載入：LINE → IG → 地圖 -->
+            <div class="w-full space-y-3">
                 <a href="https://lin.ee/MqLdJEe" target="_blank" class="btn-card flex items-center p-4 rounded-2xl group hover:border-[#06C755]/50">
                     <div class="w-10 h-10 rounded-full bg-[#06C755]/10 text-[#06C755] flex items-center justify-center mr-4 group-hover:bg-[#06C755] group-hover:text-white transition-colors duration-300">
                         <svg viewBox="0 0 256 256" class="w-5 h-5" fill="currentColor"><g transform="translate(1.4 1.4) scale(2.81)"><path d="M 42.685 88.018 c -0.944 0 -1.935 -0.233 -2.809 -0.929 c -2.075 -1.653 -1.61 -4.302 -1.435 -5.299 l 0.015 -0.085 c 0.097 -0.573 0.523 -3.138 0.589 -3.532 c 0.143 -1.106 0.122 -1.725 0.087 -2.032 c -0.248 -0.131 -0.736 -0.332 -1.527 -0.51 C 15.806 72.699 0 57.334 0 39.057 C 0 18.615 20.187 1.984 45 1.984 c 24.813 0 45 16.631 45 37.073 c 0 6.388 -1.921 12.34 -5.848 18.055 h 0.347 l -2.727 3.14 c -0.471 0.568 -0.964 1.135 -1.476 1.7 l -0.03 0.034 c -9.005 10.364 -29.164 23.109 -34.124 25.199 C 45.535 87.442 44.169 88.018 42.685 88.018 z M 45 7.872 c -21.566 0 -39.112 13.99 -39.112 31.185 c 0 15.321 13.716 28.255 32.614 30.754 l 0.234 0.04 c 3.099 0.668 5.056 1.964 5.817 3.853 c 0.524 1.311 0.625 2.988 0.324 5.285 l -0.015 0.099 c 0 0 -0.221 1.327 -0.399 2.397 c 5.106 -2.446 21.464 -12.945 29.972 -21.843 l 1.432 -1.571 c 5.626 -6.17 8.246 -12.212 8.246 -19.015 C 84.112 21.862 66.566 7.872 45 7.872 z"/><path d="M 37.309 31.467 h -2.655 c -0.407 0 -0.737 0.33 -0.737 0.736 v 16.492 c 0 0.406 0.33 0.735 0.737 0.735 h 2.655 c 0.407 0 0.737 -0.329 0.737 -0.735 V 32.203 C 38.047 31.797 37.716 31.467 37.309 31.467"/><path d="M 55.584 31.467 h -2.655 c -0.407 0 -0.737 0.33 -0.737 0.736 v 9.798 l -7.558 -10.207 c -0.017 -0.026 -0.037 -0.051 -0.057 -0.075 h -2.655 c -0.407 0 -0.737 0.33 -0.737 0.736 v 16.492 c 0 0.406 0.33 0.735 0.737 0.735 h 2.655 v -10.59 l 7.567 10.22 c 0.052 0.073 0.117 0.134 0.187 0.182 h 2.655 c 0.407 0 0.737 -0.329 0.737 -0.735 V 32.203 C 56.321 31.797 55.991 31.467 55.584 31.467"/><path d="M 30.91 45.302 h -7.214 V 32.204 c 0 -0.407 -0.33 -0.737 -0.737 -0.737 h -2.655 c -0.407 0 -0.737 0.33 -0.737 0.737 v 16.491 c 0 0.407 0.33 0.737 0.737 0.737 H 30.91 c 0.407 0 0.736 -0.33 0.736 -0.737 v -2.655 C 31.646 45.632 31.316 45.302 30.91 45.302"/><path d="M 70.245 35.597 c 0.407 0 0.736 -0.33 0.736 -0.737 v -2.655 c 0 -0.407 -0.329 -0.738 -0.736 -0.738 H 59.639 v 16.489 c 0 0.407 0.33 0.737 0.737 0.737 h 10.606 c 0.407 0 0.736 -0.33 0.736 -0.737 v -2.655 c 0 -0.407 -0.329 -0.737 -0.736 -0.737 h -7.213 v -2.788 h 7.213 c 0.407 0 0.736 -0.33 0.736 -0.737 v -2.655 c 0 -0.407 -0.329 -0.738 -0.736 -0.738 h -7.213 v -2.787 H 70.245 z"/></g></svg>                    
                     </div>
                     <div class="flex-1">
-                         <span class="block text-xs font-bold text-theme-brown/70 tracking-widest uppercase mb-0.5">Online Booking</span>
+                         <span class="block text-xs font-bold text-theme-sub tracking-widest uppercase mb-0.5">Online Booking</span>
                          <span class="block text-sm font-bold text-theme-text group-hover:text-[#06C755] transition-colors">加入 LINE 官方帳號</span>
                     </div>
-                    <i data-lucide="chevron-right" class="w-4 h-4 text-theme-brown/30 group-hover:text-[#06C755]"></i>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-300 group-hover:text-[#06C755]"></i>
                 </a>
 
-                <a href="https://www.instagram.com/woofmen.petsalon?igsh=MXcydGNnbGxqaDh5bg%3D%3D&utm_source=qr" target="_blank" class="btn-card flex items-center p-4 rounded-2xl group" style="animation-delay:0.3s;">
-                     <div class="w-10 h-10 rounded-full bg-pink-100 text-pink-500 flex items-center justify-center mr-4 group-hover:bg-pink-500 group-hover:text-white transition-colors duration-300">
+                <a href="https://www.instagram.com/woofmen.petsalon?igsh=MXcydGNnbGxqaDh5bg%3D%3D&utm_source=qr" target="_blank" class="btn-card flex items-center p-4 rounded-2xl group reveal-item" style="animation-delay:0.6s;">
+                    <div class="w-10 h-10 rounded-full bg-pink-100 text-pink-500 flex items-center justify-center mr-4 group-hover:bg-pink-500 group-hover:text-white transition-colors duration-300">
                         <i data-lucide="instagram" class="w-5 h-5"></i>
                     </div>
                     <div class="flex-1">
-                         <span class="block text-xs font-bold text-theme-brown/70 tracking-widest uppercase mb-0.5">Social Media</span>
-                         <span class="block text-sm font-bold text-theme-text group-hover:text-pink-500 transition-colors">追蹤 Instagram 官方帳號</span>
+                        <span class="block text-xs font-bold text-theme-sub tracking-widest uppercase mb-0.5">Social Media</span>
+                        <span class="block text-sm font-bold text-theme-text group-hover:text-pink-500 transition-colors">追蹤 Instagram 官方帳號</span>
                     </div>
-                    <i data-lucide="arrow-up-right" class="w-4 h-4 text-theme-brown/30 group-hover:text-pink-500"></i>
+                    <i data-lucide="arrow-up-right" class="w-4 h-4 text-gray-300 group-hover:text-pink-500"></i>
                 </a>
 
-                <a href="https://maps.google.com/?q=桃園市中壢區高鐵站前西路二段208號1樓" target="_blank" class="btn-card flex items-center p-4 rounded-2xl group" style="animation-delay:0.45s;">
-                     <div class="w-10 h-10 rounded-full bg-theme-primary/20 text-theme-primaryDeep flex items-center justify-center mr-4 group-hover:bg-theme-primary group-hover:text-white transition-colors">
+                <a href="https://maps.google.com/?q=桃園市中壢區高鐵站前西路二段208號1樓" target="_blank" class="btn-card flex items-center p-4 rounded-2xl group reveal-item" style="animation-delay:0.8s;">
+                    <div class="w-10 h-10 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center mr-4 group-hover:bg-theme-yellow group-hover:text-white transition-colors">
                         <i data-lucide="map-pin" class="w-5 h-5"></i>
                     </div>
                     <div class="flex-1">
-                         <span class="block text-xs font-bold text-theme-brown/70 tracking-widest uppercase mb-0.5">Location</span>
-                         <span class="block text-sm font-bold text-theme-text group-hover:text-theme-primaryDeep transition-colors">桃園市中壢區高鐵站前西路二段208號1樓</span>
+                        <span class="block text-xs font-bold text-theme-sub tracking-widest uppercase mb-0.5">Location</span>
+                        <span class="block text-sm font-bold text-theme-text group-hover:text-theme-yellow transition-colors">桃園市中壢區高鐵站前西路二段208號1樓</span>
                     </div>
-                    <i data-lucide="arrow-up-right" class="w-4 h-4 text-theme-brown/30 group-hover:text-theme-primary"></i>
+                    <i data-lucide="arrow-up-right" class="w-4 h-4 text-gray-300 group-hover:text-theme-yellow"></i>
                 </a>
             </div>
         </div>
