@@ -403,6 +403,246 @@
   gap:10px;
   margin-top:12px;
 }
+/* === 條款美化 v2 === */
+.terms-body{
+  background:#F9F6F2;
+  padding:22px;
+}
+.terms-body > * + *{
+  margin-top:14px;
+}
+.terms-hero{
+  text-align:center;
+  background:#fff;
+  border:1px solid #EAD9C9;
+  border-radius:16px;
+  padding:14px 12px;
+  box-shadow:0 6px 16px rgba(166,138,124,0.08);
+}
+.terms-title{
+  font-weight:900;
+  font-size:16px;
+  color:#7C604E;
+}
+.terms-subtitle{
+  font-size:11px;
+  color:#A9998E;
+  margin-top:4px;
+}
+.terms-section{
+  background:#fff;
+  border:1px solid #EAD9C9;
+  border-radius:18px;
+  padding:14px;
+  box-shadow:0 8px 18px rgba(166,138,124,0.08);
+}
+.terms-section-head{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:10px;
+}
+.terms-chip{
+  display:inline-flex;
+  align-items:center;
+  padding:3px 8px;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.2em;
+  border-radius:999px;
+  background:#F3E7D8;
+  color:#8D6E63;
+  border:1px solid #E1C9B8;
+}
+.terms-section-head h3{
+  font-size:14px;
+  font-weight:800;
+  color:#8D6E63;
+}
+.terms-article{
+  border:1px dashed #EAD9C9;
+  border-radius:14px;
+  padding:12px;
+  background:#FFFCF8;
+}
+.terms-article + .terms-article{
+  margin-top:10px;
+}
+.terms-article h4{
+  font-weight:800;
+  font-size:13px;
+  color:#8D6E63;
+  margin-bottom:6px;
+}
+.terms-list{
+  list-style:disc;
+  margin-left:18px;
+  font-size:12px;
+  line-height:1.6;
+  color:#7C604E;
+}
+.terms-sublist{
+  list-style:circle;
+  margin-left:18px;
+  margin-top:6px;
+}
+.terms-text{
+  font-size:12px;
+  line-height:1.6;
+  color:#7C604E;
+}
+.terms-warning{
+  background:#FFF3F3;
+  border:1px solid #F3CACA;
+  color:#C86969;
+  border-radius:10px;
+  padding:8px 10px;
+  font-size:12px;
+  font-weight:700;
+  margin-top:8px;
+}
+.terms-note{
+  background:#FFF6EA;
+  border:1px solid #EAD9C9;
+  border-radius:10px;
+  padding:8px 10px;
+  font-size:12px;
+  font-weight:700;
+  color:#8D6E63;
+  margin-top:8px;
+}
+.terms-footer-tip{
+  text-align:center;
+  font-size:11px;
+  color:#A9998E;
+}
+/* === 本次服務內容區塊 === */
+.service-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.service-card{ display:block; cursor:pointer; }
+.service-card input{ position:absolute; opacity:0; pointer-events:none; }
+
+.service-card__body{
+  border:1.5px solid #EAD9C9;
+  background:#fff;
+  border-radius:18px;
+  padding:16px 12px;
+  min-height:88px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  box-shadow:0 8px 18px rgba(166,138,124,0.08);
+  transition:.2s;
+}
+.service-card__body:hover{
+  border-color:#A68A7C;
+  background:#F9F4EE;
+}
+.service-icon{
+  width:44px;
+  height:44px;
+  border-radius:999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#F5E9D0;
+  color:#8D6E63;
+  border:1px solid #E6D7CB;
+}
+.service-text{
+  font-weight:800;
+  font-size:13px;
+  color:#7C604E;
+}
+
+.service-card input:checked + .service-card__body{
+  border-color:#A68A7C;
+  background:#FFF6EA;
+  box-shadow:0 10px 22px rgba(166,138,124,0.18);
+}
+.service-card input:checked + .service-card__body .service-icon{
+  background:linear-gradient(135deg,#A68A7C,#E6C88A);
+  color:#fff;
+  border:none;
+}
+
+/* 其他項目寬卡 */
+.service-card--wide{ grid-column:1 / -1; }
+.service-card__body--wide{
+  flex-direction:row;
+  justify-content:space-between;
+  padding:14px 16px;
+}
+.service-check{
+  width:24px;
+  height:24px;
+  border-radius:999px;
+  border:2px solid #E6D7CB;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  background:#fff;
+}
+.service-card input:checked + .service-card__body .service-check{
+  background:linear-gradient(135deg,#A68A7C,#E6C88A);
+  border-color:#A68A7C;
+  color:#fff;
+}
+
+/* === 預計接回時間 === */
+.pickup-choice{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.pickup-option{ display:inline-flex; cursor:pointer; }
+.pickup-option input{ position:absolute; opacity:0; pointer-events:none; }
+.pickup-pill{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 14px;
+  border-radius:14px;
+  border:1.5px solid #EAD9C9;
+  background:#fff;
+  font-weight:800;
+  font-size:12px;
+  color:#7C604E;
+  box-shadow:0 6px 14px rgba(166,138,124,.08);
+  transition:.2s;
+}
+.pickup-option input:checked + .pickup-pill{
+  background:linear-gradient(135deg,#A68A7C,#E6C88A);
+  color:#fff;
+  border-color:#A68A7C;
+}
+
+.pickup-time{
+  margin-top:8px;
+}
+
+.pickup-note{
+  background:#FFF3F3;
+  border:1px solid #F3CACA;
+  color:#C86969;
+  border-radius:12px;
+  padding:8px 10px;
+  font-size:12px;
+  font-weight:700;
+}
+
+/* ✅ 接回時間鎖定樣式 */
+.pickup-locked{
+  opacity: .5;
+  pointer-events: none;
+  filter: grayscale(0.2);
+}
 </style>
 </head>
 
@@ -884,6 +1124,100 @@
 </div>
     </div>
 </div>
+<!-- ✅ 本次服務內容 -->
+<div class="card-panel p-6 rounded-2xl space-y-4">
+    <div class="flex items-center gap-3 border-b-2 border-dashed border-[#EAE2D9] pb-3">
+        <div class="w-9 h-9 rounded-full bg-theme-yellow/30 flex items-center justify-center text-theme-brownDeep">
+            <i data-lucide="scissors" class="w-5 h-5"></i>
+        </div>
+        <h3 class="font-bold text-theme-brownDeep text-base">本次服務內容 *</h3>
+    </div>
+
+    <div class="service-grid">
+        <label class="service-card">
+            <input type="radio" name="service" value="deposit" required>
+            <div class="service-card__body">
+                <div class="service-icon"><i data-lucide="calendar"></i></div>
+                <div class="service-text">儲值洗澡</div>
+            </div>
+        </label>
+
+        <label class="service-card">
+            <input type="radio" name="service" value="daily">
+            <div class="service-card__body">
+                <div class="service-icon"><i data-lucide="droplet"></i></div>
+                <div class="service-text">日常光澤洗</div>
+            </div>
+        </label>
+
+        <label class="service-card">
+            <input type="radio" name="service" value="makeover">
+            <div class="service-card__body">
+                <div class="service-icon"><i data-lucide="sparkles"></i></div>
+                <div class="service-text">煥新大改造</div>
+            </div>
+        </label>
+
+        <label class="service-card">
+            <input type="radio" name="service" value="partial">
+            <div class="service-card__body">
+                <div class="service-icon"><i data-lucide="scissors"></i></div>
+                <div class="service-text">局部修剪</div>
+            </div>
+        </label>
+
+        <label class="service-card service-card--wide">
+            <input type="radio" name="service" value="other">
+            <div class="service-card__body service-card__body--wide">
+                <div class="flex items-center gap-3">
+                    <div class="service-icon"><i data-lucide="more-horizontal"></i></div>
+                    <div class="service-text">其他項目</div>
+                </div>
+                <div class="service-check"><i data-lucide="check"></i></div>
+            </div>
+        </label>
+    </div>
+
+    <input id="service-other-input" type="text" class="form-input hidden"
+           placeholder="請說明服務內容（例如：剪指甲、清耳朵...）">
+</div>
+<!-- ✅ 預計接回時間 -->
+<div class="card-panel p-6 rounded-2xl space-y-4">
+    <div class="flex items-center gap-3 border-b-2 border-dashed border-[#EAE2D9] pb-3">
+        <div class="w-9 h-9 rounded-full bg-theme-yellow/30 flex items-center justify-center text-theme-brownDeep">
+            <i data-lucide="clock" class="w-5 h-5"></i>
+        </div>
+        <h3 class="font-bold text-theme-brownDeep text-base">預計接回時間 *</h3>
+    </div>
+
+    <div class="pickup-choice">
+        <label class="pickup-option">
+            <input type="radio" name="pickup" value="later" required>
+            <span class="pickup-pill">
+                <i data-lucide="bell" class="w-4 h-4"></i>
+                另行通知
+            </span>
+        </label>
+
+        <label class="pickup-option">
+            <input type="radio" name="pickup" value="time">
+            <span class="pickup-pill">
+                <i data-lucide="clock-3" class="w-4 h-4"></i>
+                選擇時間
+            </span>
+        </label>
+    </div>
+
+    <div id="pickup-time-wrap" class="pickup-time">
+        <!-- ✅ 記得加 name -->
+        <input type="time" id="pickup-time" name="pickup_time" class="form-input" placeholder="或自行選擇時間">
+    </div>
+
+    <div class="pickup-note">
+        ⏰ 逾時 2 小時以上，將酌收 $150/小時 逾時費。
+    </div>
+</div>
+
                 <!-- ✅ 皮膚狀況 -->
                 <div class="card-panel p-6 rounded-2xl space-y-4">
                     <h3 class="font-bold text-theme-brownDeep border-b-2 border-dashed border-[#EAE2D9] pb-2">皮膚狀況 *</h3>
@@ -1268,6 +1602,44 @@ document.querySelectorAll("input[name='bath']").forEach(r => {
         }
     });
 });
+// ✅ 本次服務內容「其他」顯示輸入框
+document.querySelectorAll("input[name='service']").forEach(r => {
+    r.addEventListener("change", () => {
+        const otherInput = document.getElementById("service-other-input");
+        const selected = document.querySelector("input[name='service']:checked");
+        if (selected && selected.value === "other") {
+            otherInput.classList.remove("hidden");
+            otherInput.required = true;
+        } else {
+            otherInput.classList.add("hidden");
+            otherInput.required = false;
+            otherInput.value = "";
+        }
+    });
+});
+// ✅ 預計接回時間切換（無快速時間版本）
+document.querySelectorAll("input[name='pickup']").forEach(r => {
+    r.addEventListener("change", () => {
+        const timeInput = document.getElementById("pickup-time");
+
+        if (r.value === "later" && r.checked) {
+            // 鎖定
+            timeInput.type = "text";
+            timeInput.value = "另行通知完成接回時間";
+            timeInput.disabled = true;
+            timeInput.required = false;
+            timeInput.classList.add("pickup-locked");
+
+        } else if (r.value === "time" && r.checked) {
+            // 解鎖
+            timeInput.type = "time";
+            timeInput.value = "";
+            timeInput.disabled = false;
+            timeInput.required = true;
+            timeInput.classList.remove("pickup-locked");
+        }
+    });
+});
         // ✅ 條款 + 簽名
         let termsRead = false;
         let sigPad = null;
@@ -1567,16 +1939,175 @@ window.addEventListener("resize", () => {
             <span>美容服務條款</span>
             <button id="terms-close" class="text-white">✕</button>
         </div>
-        <div id="terms-content" class="terms-body text-sm leading-relaxed space-y-3">
-            <p>1. 飼主需如實告知毛孩健康狀況。</p>
-            <p>2. 若有隱瞞病史導致意外，飼主需自行負責。</p>
-            <p>3. 美容過程若出現攻擊行為，店家有權中止服務。</p>
-            <p>4. 美容完成後如無異議即視為服務完成。</p>
-            <p>5. 若有傳染病、寄生蟲，將拒絕服務。</p>
-            <p>6. 以上條款均視為雙方同意遵守。</p>
-            <p>※ 請滑到底部才能點選同意</p>
-            <div style="height:50px"></div>
+<div id="terms-content" class="terms-body">
+
+    <div class="terms-hero">
+        <div class="terms-title">汪們寵物美容服務條款</div>
+        <div class="terms-subtitle">請務必完整閱讀，滑至底部可解鎖同意</div>
+    </div>
+
+    <!-- 第一章 -->
+    <section class="terms-section">
+        <div class="terms-section-head">
+            <span class="terms-chip">第一章</span>
+            <h3>一般美容服務條款</h3>
         </div>
+
+        <div class="terms-article">
+            <h4>第一條｜服務性質</h4>
+            <ul class="terms-list">
+                <li>本服務為寵物美容、洗澡、修剪造型及皮毛保養服務，非醫療行為。</li>
+                <li>本店採一對一美容制度，以毛孩情緒與安全為優先考量。</li>
+                <li>若美容過程中發現皮膚異常、傷口或腫塊，乙方得拍照通知甲方。</li>
+            </ul>
+        </div>
+
+        <div class="terms-article">
+            <h4>第二條｜健康告知義務</h4>
+            <ul class="terms-list">
+                <li>是否有攻擊紀錄</li>
+                <li>是否有心臟病、癲癇、氣管塌陷等慢性疾病</li>
+                <li>是否曾於美容過程產生極度緊迫</li>
+                <li>是否近期接受治療或施打疫苗</li>
+            </ul>
+            <div class="terms-warning">⚠ 若因隱匿資訊導致風險增加，甲方須自行負責。</div>
+        </div>
+
+        <div class="terms-article">
+            <h4>第三條｜特殊情況與中止權</h4>
+            <ul class="terms-list">
+                <li>強烈掙扎</li>
+                <li>攻擊行為</li>
+                <li>情緒失控</li>
+                <li>身體不適</li>
+            </ul>
+            <div class="terms-note">乙方得中止服務，並收取已完成部分之服務費用。</div>
+        </div>
+
+        <div class="terms-article">
+            <h4>第四條｜打結與廢毛處理</h4>
+            <ul class="terms-list">
+                <li>嚴重打結或廢毛量過大需額外收費。</li>
+                <li>若需全身剃除打結毛，甲方同意可能產生局部紅疹或皮膚顯露之情形。</li>
+            </ul>
+        </div>
+
+        <div class="terms-article">
+            <h4>第五條｜緊急醫療處理</h4>
+            <div class="terms-note">如發生呼吸困難、抽搐、昏厥等緊急狀況，乙方得立即送醫，相關費用由甲方負擔。</div>
+        </div>
+
+        <div class="terms-article">
+            <h4>第六條｜預約與取消規範</h4>
+            <ul class="terms-list">
+                <li>改約須至少提前一天通知。</li>
+                <li>當日取消或未到者，乙方得拒絕日後預約。</li>
+                <li>多次臨時改約者，乙方得終止服務關係。</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 第二章 -->
+    <section class="terms-section">
+        <div class="terms-section-head">
+            <span class="terms-chip">第二章</span>
+            <h3>皮膚管理 SPA 課程條款</h3>
+        </div>
+
+        <div class="terms-article">
+            <h4>第一條｜課程性質</h4>
+            <ul class="terms-list">
+                <li>本課程為皮膚與被毛保養性服務，非醫療行為。</li>
+                <li>效果因個體體質與生活環境而異，乙方不保證立即改善或根治。</li>
+            </ul>
+        </div>
+
+        <div class="terms-article">
+            <h4>第二條｜課程內容</h4>
+            <p class="terms-text">課程類型：四堂皮膚管理</p>
+        </div>
+
+        <div class="terms-article">
+            <h4>第三條｜退費規範</h4>
+            <ul class="terms-list">
+                <li>已使用堂數以原單堂定價計算。</li>
+                <li>剩餘金額扣除 10% 手續費後退還。</li>
+                <li>須以書面申請退費。</li>
+            </ul>
+        </div>
+
+        <div class="terms-article">
+            <h4>第四條｜課程暫停</h4>
+            <p class="terms-text">若毛孩出現嚴重皮膚感染、開放性傷口或醫療狀況，乙方得暫停課程。</p>
+        </div>
+    </section>
+
+    <!-- 第三章 -->
+    <section class="terms-section">
+        <div class="terms-section-head">
+            <span class="terms-chip">第三章</span>
+            <h3>儲值卡條款</h3>
+        </div>
+
+        <div class="terms-article">
+            <h4>第一條｜儲值性質</h4>
+            <ul class="terms-list">
+                <li>儲值卡為預付消費金額。</li>
+                <li>本儲值堂數無使用期限。</li>
+                <li>不得兌換現金或轉讓他人（經乙方書面同意者除外）。</li>
+            </ul>
+        </div>
+
+        <div class="terms-article">
+            <h4>第二條｜回訪維持制度</h4>
+            <ul class="terms-list">
+                <li>鼓勵毛孩維持每一至兩週固定回訪。</li>
+                <li>超過一個月未回訪：</li>
+                <ul class="terms-sublist">
+                    <li>儲值餘額仍可使用。</li>
+                    <li>乙方得暫停後續儲值購買資格。</li>
+                    <li>未來僅提供單次收費服務。</li>
+                </ul>
+            </ul>
+        </div>
+
+        <div class="terms-article">
+            <h4>第三條｜退費規定</h4>
+            <ul class="terms-list">
+                <li>已使用部分以原價計算。</li>
+                <li>已享優惠差額需補足。</li>
+                <li>剩餘金額扣除 10% 手續費後退還。</li>
+            </ul>
+        </div>
+
+        <div class="terms-article">
+            <h4>第四條｜終止合作</h4>
+            <ul class="terms-list">
+                <li>多次違反預約規範</li>
+                <li>隱匿健康狀況</li>
+                <li>對人員不當言行</li>
+                <li>未配合安全規範</li>
+            </ul>
+            <p class="terms-text">終止後依退費條款辦理。</p>
+        </div>
+    </section>
+
+    <!-- 第四章 -->
+    <section class="terms-section">
+        <div class="terms-section-head">
+            <span class="terms-chip">第四章</span>
+            <h3>爭議處理</h3>
+        </div>
+        <div class="terms-note">
+            本契約以中華民國法律為準據法，<br>
+            如有爭議，雙方同意以桃園地方法院為第一審管轄法院。
+        </div>
+    </section>
+
+    <div class="terms-footer-tip">※ 請滑到底部才能點選同意</div>
+
+    <div style="height:40px"></div>
+</div>
         <div class="terms-footer">
             <button id="terms-agree" class="w-full py-3 rounded-xl font-bold bg-theme-brown text-white" disabled>
                 我已閱讀並同意
@@ -1600,5 +2131,32 @@ window.addEventListener("resize", () => {
     </div>
 </div>
 </div>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").then((reg) => {
+
+      // 偵測更新
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed") {
+            if (navigator.serviceWorker.controller) {
+              // 有新版本 → 直接更新
+              newWorker.postMessage({ action: "skipWaiting" });
+            }
+          }
+        });
+      });
+
+    });
+
+    // 當更新完成，強制重新整理
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      window.location.reload();
+    });
+  });
+}
+</script>
 </body>
 </html>
