@@ -1,0 +1,22 @@
+{
+  "name": "Woofmen 汪們毛孩沙龍所",
+  "short_name": "Woofmen",
+  "description": "桃園青埔日系寵物美容｜寵物美容預約與契約表單",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FBF9F6",
+  "theme_color": "#A68A7C",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

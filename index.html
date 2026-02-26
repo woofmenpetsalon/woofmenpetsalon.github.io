@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Woofmen 汪們毛孩沙龍所 | 桃園青埔日系寵物美容</title>
     <link rel="icon" href="logo.png" type="image/png">
-
+    <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -2075,7 +2075,7 @@ window.addEventListener("resize", () => {
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").then((reg) => {
+    navigator.serviceWorker.register("./sw.js?v=1").then((reg) => {
 
       // 偵測更新
       reg.addEventListener("updatefound", () => {
