@@ -159,34 +159,6 @@
     border: 1px solid rgba(255,255,255,.4);
   }
 
-  .notice-card {
-    background: linear-gradient(135deg,#FFF9F1,#FFF2DF);
-    border: 1.5px solid #EAD9C9;
-    box-shadow: 0 10px 25px rgba(166,138,124,.15);
-    position: relative;
-    overflow: hidden;
-  }
-  .notice-card::after {
-    content:"";
-    position:absolute;
-    top:-60px; right:-40px;
-    width:160px; height:160px;
-    background: radial-gradient(circle, rgba(230,200,138,.35), transparent 65%);
-    opacity:.6;
-  }
-  .notice-header { @apply flex items-center gap-2; }
-  .notice-icon {
-    @apply w-9 h-9 rounded-xl flex items-center justify-center text-white;
-    background: linear-gradient(135deg,#A68A7C,#E6C88A);
-    box-shadow: 0 6px 14px rgba(166,138,124,.25);
-  }
-  .notice-title { @apply text-sm font-black text-[#7C604E]; }
-  .notice-sub { @apply text-[13px] text-[#8A6F5B] mt-1 leading-relaxed; }
-  .notice-ack {
-    @apply mt-3 px-3 py-2 rounded-xl flex items-center gap-2;
-    background: #FFF6EA;
-  }
-
   .section-pill {
     @apply inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-extrabold 
            tracking-[0.2em] uppercase bg-[#F3E7D8] text-[#8D6E63] border border-[#E1C9B8];
@@ -391,18 +363,6 @@
   border:1px solid #E1C9B8;
 }
 
-/* ✅ 感謝區塊（如果你還會用到） */
-.thanks-box p{
-  font-size:13px;
-  color:#7C604E;
-  line-height:1.6;
-}
-.thanks-box .ack-row{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-top:12px;
-}
 /* === 條款美化 v2 === */
 .terms-body{
   background:#F9F6F2;
@@ -833,17 +793,17 @@
         <input type="text" class="form-input" placeholder="請輸入完整地址" required>
     </div>
 
-    <div class="border-t border-dashed border-[#EAE2D9] pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-            <label class="block text-sm font-bold mb-1 ml-1 text-red-400">緊急聯絡人姓名 <span class="text-red-400">*</span></label>
-            <input type="text" class="form-input border-red-200 bg-red-50/40" required
-       inputmode="numeric" pattern="^09\\d{8}$" maxlength="10">
-        </div>
-        <div>
-            <label class="block text-sm font-bold mb-1 ml-1 text-red-400">緊急連絡電話 <span class="text-red-400">*</span></label>
-            <input type="tel" class="form-input border-red-200 bg-red-50/40" required>
-        </div>
+<div class="border-t border-dashed border-[#EAE2D9] pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+        <label class="block text-sm font-bold mb-1 ml-1 text-red-400">緊急聯絡人姓名 <span class="text-red-400">*</span></label>
+        <input type="text" class="form-input border-red-200 bg-red-50/40" placeholder="請輸入姓名" required>
     </div>
+    <div>
+        <label class="block text-sm font-bold mb-1 ml-1 text-red-400">緊急連絡電話 <span class="text-red-400">*</span></label>
+        <input type="tel" class="form-input border-red-200 bg-red-50/40" placeholder="0912345678" required
+               inputmode="numeric" pattern="^09\\d{8}$" maxlength="10">
+    </div>
+</div>
 </div>
 
 <!-- ✅ 寵物詳細資料 -->
@@ -1301,25 +1261,6 @@
 </div>
 </div>
 
-<!-- ✅ 最後確認（新提醒卡） -->
-<div class="card-panel p-6 rounded-2xl notice-card">
-    <div class="notice-header">
-        <div class="notice-icon">
-            <i data-lucide="heart"></i>
-        </div>
-        <div>
-            <div class="notice-title">非常感謝填寫❤</div>
-            <div class="notice-sub">
-                填完後要記得到官方 LINE 告知毛孩名字及欲預約時段唷！
-            </div>
-        </div>
-    </div>
-
-    <label class="notice-ack cursor-pointer">
-        <input type="checkbox" required class="custom-checkbox" name="pet_ack" id="pet_ack">
-        <span class="text-sm font-bold text-theme-brownDeep">本人已了解並確實告知寵物狀況</span>
-    </label>
-</div>
                 <!-- ✅ 乙方資訊 -->
 <div class="card-panel p-6 rounded-2xl space-y-3">
     <div class="partner-info space-y-3">
