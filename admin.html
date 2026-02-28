@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Woofmen 汪們 | 後台管理系統</title>
+
+  <link rel="icon" href="logo.png" type="image/png" />
+  <link rel="apple-touch-icon" href="logo.png" />
+  <link rel="manifest" href="manifest-admin.json" />
+  <meta name="theme-color" content="#A68A7C" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            theme: {
+              bg: "#FBF9F6",
+              brown: "#A68A7C",
+              brownDeep: "#8D6E63",
+              yellow: "#E6C88A",
+              yellowLight: "#F5E9D0",
+              text: "#7C604E",
+              sub: "#A9998E",
+            },
+          },
+          fontFamily: {
+            sans: ['"Zen Maru Gothic"', "sans-serif"],
+          },
+          boxShadow: {
+            cute: "4px 4px 0px 0px #D6C6BA",
+            "cute-hover": "6px 6px 0px 0px #C9B6A9",
+            "cute-sm": "3px 3px 0px 0px #D6C6BA",
+          },
+          backgroundImage: {
+            "gradient-brand": "linear-gradient(135deg, #A68A7C 0%, #E6C88A 100%)",
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    body {
+      background-color: #FBF9F6;
+      background-image:
+        radial-gradient(circle at 10% 20%, rgba(179,154,140,0.1) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(230,200,138,0.1) 0%, transparent 40%);
+      color: #7C604E;
+      -webkit-tap-highlight-color: transparent;
+      font-family: "Zen Maru Gothic", sans-serif;
+    }
+
+    .card-panel {
+      background: rgba(255, 252, 247, 0.96);
+      border: 1.5px solid #EAD9C9;
+      border-radius: 24px;
+      box-shadow: 0 12px 28px rgba(166,138,124,0.12);
+    }
+
+    .card-panel-soft {
+      background: rgba(255,255,255,0.88);
+      border: 1.5px solid #EAE2D9;
+      border-radius: 18px;
+      box-shadow: 0 8px 20px rgba(166,138,124,0.08);
+    }
+
+    .input-woof {
+      width: 100%;
+      background: #fff;
+      border: 1.5px solid #EAE2D9;
+      padding: 0.8rem 1rem;
+      border-radius: 14px;
+      color: #7C604E;
+      transition: all 0.25s;
+      outline: none;
+    }
+    .input-woof:focus {
+      border-color: #A68A7C;
+      box-shadow: 0 0 0 4px rgba(166,138,124,0.15);
+    }
+
+    .btn-woof {
+      border-radius: 14px;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(135deg,#A68A7C,#E6C88A);
+      border: 1px solid rgba(141,110,99,.4);
+      box-shadow: 0 10px 24px rgba(166,138,124,.22);
+      transition: .2s;
+    }
+    .btn-woof:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(166,138,124,.28);
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .float-layer {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .bubble {
+      position: absolute;
+      border-radius: 9999px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.72), rgba(230,200,138,0.18));
+      border: 1px solid rgba(179,154,140,0.25);
+      box-shadow: 0 8px 20px rgba(166,138,124,0.08);
+      animation: float 7s ease-in-out infinite;
+    }
+    .star {
+      position: absolute;
+      color: rgba(179,154,140,0.35);
+      animation: float 6s ease-in-out infinite, twinkle 3.5s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    @keyframes twinkle {
+      0%,100% { opacity: .4; transform: scale(.9); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <div id="toast-container" class="fixed top-5 left-0 right-0 z-[100] flex flex-col items-center space-y-2 pointer-events-none px-4"></div>
+
+  <!-- Login View -->
+  <section id="login-view" class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+    <div class="float-layer">
+      <div class="bubble w-20 h-20 top-10 left-8" style="animation-delay:0s;"></div>
+      <div class="bubble w-12 h-12 top-40 right-10" style="animation-delay:1s;"></div>
+      <div class="bubble w-28 h-28 bottom-16 left-[-20px]" style="animation-delay:2s;"></div>
+      <div class="bubble w-10 h-10 bottom-10 right-16" style="animation-delay:3s;"></div>
+      <i data-lucide="star" class="star w-5 h-5 top-16 right-24" style="animation-delay:.5s;"></i>
+      <i data-lucide="sparkles" class="star w-5 h-5 bottom-24 left-20" style="animation-delay:1.2s;"></i>
+    </div>
+
+    <div class="card-panel p-8 w-full max-w-sm text-center space-y-6 relative z-10">
+      <div class="mx-auto w-24 h-24 rounded-full bg-white p-2 shadow-cute border border-[#EAD9C9] -mt-16 mb-2 flex items-center justify-center">
+        <img src="logo.png" alt="Woofmen Logo" class="w-full h-full object-cover rounded-full" />
+      </div>
+
+      <div>
+        <h1 class="text-2xl font-black tracking-widest text-theme-text">Woofmen 汪們</h1>
+        <p class="text-xs text-theme-sub font-bold tracking-[0.2em] uppercase mt-1">Admin Dashboard</p>
+      </div>
+
+      <div class="flex p-1.5 bg-[#F9F4EE] rounded-2xl border border-[#EAD9C9] shadow-inner">
+        <button id="role-admin" onclick="switchRole('admin')" class="flex-1 py-2.5 rounded-xl text-sm font-bold bg-white text-theme-brown border border-theme-brown/30 shadow-sm flex items-center justify-center gap-2">
+          <i data-lucide="crown" class="w-4 h-4"></i> 管理員
+        </button>
+        <button id="role-staff" onclick="switchRole('staff')" class="flex-1 py-2.5 rounded-xl text-sm font-bold text-theme-sub hover:bg-white/70 flex items-center justify-center gap-2">
+          <i data-lucide="user" class="w-4 h-4"></i> 員工
+        </button>
+      </div>
+
+      <div class="relative">
+        <i data-lucide="lock" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-theme-sub/70"></i>
+        <input id="password" type="password" class="input-woof pl-12 text-center tracking-widest" placeholder="請輸入管理員密碼"
+          onkeydown="if(event.key==='Enter') handleLogin()" />
+      </div>
+
+      <button id="login-btn" onclick="handleLogin()" class="w-full py-3.5 btn-woof">
+        登入系統
+      </button>
+    </div>
+  </section>
+
+  <!-- Dashboard -->
+  <section id="dashboard-view" class="hidden min-h-screen pb-20">
+    <nav class="bg-white/85 backdrop-blur-xl border-b border-[#EAD9C9] sticky top-0 z-40">
+      <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-white border border-[#EAD9C9] overflow-hidden">
+            <img src="logo.png" alt="Woofmen Logo" class="w-full h-full object-cover" />
+          </div>
+          <div>
+            <div class="font-black text-theme-text tracking-wide">汪們後台管理</div>
+            <div class="text-[10px] text-theme-sub" id="role-badge">-</div>
+          </div>
+        </div>
+<div class="flex items-center gap-2">
+  <button id="btn-open-change-pwd" onclick="openChangePasswordModal()" class="text-xs px-3 py-2 rounded-lg hover:bg-theme-yellowLight font-bold inline-flex items-center gap-1.5">
+    <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
+    變更密碼
+  </button>
+  <span class="text-theme-sub/40">|</span>
+  <button onclick="handleLogout()" class="text-xs px-3 py-2 rounded-lg hover:bg-theme-yellowLight font-bold text-theme-sub inline-flex items-center gap-1.5">
+    <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+    登出
+  </button>
+</div>      </div>
+    </nav>
+
+    <div class="max-w-5xl mx-auto p-4 space-y-4">
+      <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div>
+          <h2 class="text-2xl font-black tracking-wider">美容契約列表</h2>
+          <p class="text-xs text-theme-sub">grooming_orders</p>
+        </div>
+        <div class="relative w-full md:w-72">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-theme-sub/70"></i>
+          <input id="search-input" type="search" class="input-woof pl-9 py-2.5 text-sm"
+            placeholder="搜尋寵物名 / 主人 / 電話" />
+        </div>
+      </div>
+
+      <div id="content-area" class="space-y-3">
+        <div class="text-center py-12 text-theme-sub">載入中...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Detail Modal -->
+  <div id="detail-modal" class="fixed inset-0 bg-black/30 hidden z-50 p-0 sm:p-4 sm:flex sm:items-center sm:justify-center opacity-0 transition-opacity">
+    <div id="modal-panel" class="bg-[#FBF9F6] w-full sm:max-w-4xl sm:rounded-[28px] rounded-t-[28px] max-h-[92vh] flex flex-col shadow-2xl translate-y-full sm:translate-y-0 sm:scale-95 transition-all">
+      <div class="p-4 border-b border-[#EAD9C9] bg-white/80 flex items-center justify-between rounded-t-[28px]">
+        <div>
+          <h3 class="font-black text-lg">合約詳情</h3>
+          <p id="modal-id" class="text-[11px] text-theme-sub">ID: -</p>
+        </div>
+        <button onclick="closeModal()" class="w-9 h-9 rounded-full bg-white border border-[#EAD9C9] flex items-center justify-center">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div id="modal-content" class="p-4 overflow-y-auto flex-1 space-y-4 no-scrollbar"></div>
+
+      <div class="p-4 border-t border-[#EAD9C9] bg-white/85 flex items-center justify-between gap-3">
+        <button id="btn-delete" onclick="requestDelete()" class="text-red-500 font-bold px-4 py-2 rounded-xl hover:bg-red-50">刪除</button>
+        <div class="flex items-center gap-2 ml-auto">
+          <button id="btn-edit" onclick="enableEdit()" class="px-5 py-2 rounded-xl bg-white border border-[#EAD9C9] font-bold">編輯資料</button>
+          <button id="btn-save" onclick="saveChanges()" class="hidden px-5 py-2 rounded-xl bg-theme-brown text-white font-bold">儲存變更</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Change Password Modal -->
+<div id="change-pwd-modal" class="fixed inset-0 bg-black/35 hidden z-[60] p-4 flex items-center justify-center opacity-0 transition-opacity">
+  <div class="w-full max-w-sm rounded-[24px] p-5 bg-[#F8F6F3] border border-[#EAD9C9] shadow-[0_20px_40px_rgba(141,110,99,0.18)]">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-black text-[32px] leading-none tracking-wider text-theme-text w-full text-center">帳號密碼變更</h3>
+      <button onclick="closeChangePasswordModal()" class="text-theme-sub hover:text-theme-brown -ml-8">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- 角色切換外觀（僅展示；實際只有管理員可用） -->
+    <div class="bg-[#ECE7E2] rounded-xl p-1 flex mb-4 border border-[#E3DBD3]">
+      <button id="cp-tab-admin" type="button"
+        class="flex-1 py-2 rounded-lg text-sm font-bold bg-[#F8F6F3] text-theme-text border border-[#DED6CE]">
+        管理員 (自己)
+      </button>
+      <button id="cp-tab-staff" type="button"
+        class="flex-1 py-2 rounded-lg text-sm font-bold text-theme-sub opacity-70 cursor-not-allowed" disabled>
+        一般員工
+      </button>
+    </div>
+
+    <div class="space-y-3">
+      <input id="cp-old-password" type="password"
+        class="w-full bg-[#EFEDEB] border border-[#E2DDD8] rounded-xl px-4 py-3 text-center text-theme-text placeholder:text-theme-sub/70 focus:outline-none focus:border-theme-brown focus:ring-2 focus:ring-theme-brown/15"
+        placeholder="請輸入管理員舊密碼" />
+      <div class="h-px bg-[#E7E1DB] my-1"></div>
+      <input id="cp-new-password" type="password"
+        class="w-full bg-[#EFEDEB] border border-[#E2DDD8] rounded-xl px-4 py-3 text-center text-theme-text placeholder:text-theme-sub/70 focus:outline-none focus:border-theme-brown focus:ring-2 focus:ring-theme-brown/15"
+        placeholder="新密碼 (至少 6 位)" />
+      <input id="cp-confirm-password" type="password"
+        class="w-full bg-[#EFEDEB] border border-[#E2DDD8] rounded-xl px-4 py-3 text-center text-theme-text placeholder:text-theme-sub/70 focus:outline-none focus:border-theme-brown focus:ring-2 focus:ring-theme-brown/15"
+        placeholder="確認新密碼" />
+    </div>
+
+    <button id="btn-change-pwd" onclick="handleChangePassword()"
+      class="w-full mt-5 py-3 rounded-xl bg-[#5A4F43] hover:bg-[#4F453B] text-white font-black tracking-wider transition">
+      確認修改
+    </button>
+  </div>
+</div>
+
+  <script>
+    lucide.createIcons();
+
+    // ===== Supabase =====
+    const SUPABASE_URL = 'https://thpjafkziebaklzpwooo.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRocGphZmt6aWViYWtsenB3b29vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzU1MTUsImV4cCI6MjA4NzgxMTUxNX0.wJE3B53IeejPs9tVEljr-g0obYFCt671Hjkr4_xMREo';
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ===== 帳號 =====
+    const ACCOUNTS = {
+      admin: "woofmenpetsalon888@gmail.com",
+      staff: "woofmen@staff.com",
+    };
+
+    // ===== 全域狀態 =====
+    let currentRole = "admin";
+    let fullDataList = [];
+    let currentItem = null;
+
+    // 可編輯欄位
+const ADMIN_EDITABLE = new Set([
+  "owner_email","owner_name","owner_phone","owner_id","owner_address",
+  "emergency_name","emergency_phone","preferred_hospital",
+  "pet_name","pet_breed","pet_weight","age_year","age_month",
+  "pet_sex","fix","chip","chip_number",
+  "history","medical_history","friendly_people","friendly_dog","aggression",
+  "pet_personality","pet_personality_other","temperament",
+  "service","service_other","pickup","pickup_time",
+  "skin","skin_other","attention_items","attention_other",
+  "bath","bath_other","last_grooming_shop","referral_source","photo",
+  "store_note"
+]);
+const STAFF_EDITABLE = new Set(["service", "service_other", "pickup", "pickup_time", "store_note"]);
+
+    const FIELD_GROUPS = [
+      {
+        title: "👤 飼主資料",
+        fields: ["owner_name","owner_phone","owner_email","owner_id","owner_address","emergency_name","emergency_phone"],
+      },
+      {
+        title: "🐾 寵物資料",
+        fields: ["pet_name","pet_breed","pet_weight","age_year","age_month","pet_sex","fix","chip","chip_number","preferred_hospital"],
+      },
+      {
+        title: "⚠️ 健康與個性",
+        fields: ["history","medical_history","friendly_people","friendly_dog","aggression","pet_personality","pet_personality_other","temperament","skin","skin_other","attention_items","attention_other","bath","bath_other"],
+      },
+      {
+        title: "✂️ 服務內容",
+        fields: ["service","service_other","pickup","pickup_time","last_grooming_shop","referral_source","photo"],
+      }
+    ];
+
+    const FIELD_LABEL = {
+      owner_name: "飼主姓名",
+      owner_phone: "飼主電話",
+      owner_email: "電子郵件",
+      owner_id: "身分證字號",
+      owner_address: "通訊地址",
+      emergency_name: "緊急聯絡人",
+      emergency_phone: "緊急電話",
+      preferred_hospital: "指定醫院",
+      pet_name: "寵物名字",
+      pet_breed: "品種",
+      pet_weight: "體重(kg)",
+      age_year: "年齡(歲)",
+      age_month: "月齡",
+      pet_sex: "性別",
+      fix: "結紮",
+      chip: "晶片狀態",
+      chip_number: "晶片號碼",
+      history: "過往病史(有/無)",
+      medical_history: "病史內容",
+      friendly_people: "親人",
+      friendly_dog: "親狗",
+      aggression: "攻擊性",
+      pet_personality: "其他個性",
+      pet_personality_other: "個性其他",
+      temperament: "美容性情",
+      service: "本次服務",
+      service_other: "服務其他",
+      pickup: "接回方式",
+      pickup_time: "接回時間",
+      skin: "皮膚狀況",
+      skin_other: "皮膚其他",
+      attention_items: "注意事項",
+      attention_other: "注意事項其他",
+      bath: "洗澡頻率",
+      bath_other: "洗澡頻率其他",
+      last_grooming_shop: "最近美容店家",
+      referral_source: "得知來源",
+photo: "照片授權",
+store_note: "店家內部備註"
+    };
+
+    // ===== 工具 =====
+    function escapeHtml(v = "") {
+      return String(v)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+    function formatDate(v) {
+      if (!v) return "-";
+      const d = new Date(v);
+      if (isNaN(d.getTime())) return "-";
+      return d.toLocaleString("zh-TW");
+    }
+    function toDisplay(v) {
+      if (v === null || v === undefined || v === "") return "-";
+      if (Array.isArray(v)) return v.join("、");
+      return String(v);
+    }
+    function getServiceText(item) {
+      if (item.service === "其他項目") {
+        return `其他項目（${item.service_other || "未填"}）`;
+      }
+      return item.service || "未指定";
+    }
+function isBlank(v) {
+  if (v === null || v === undefined) return true;
+  if (Array.isArray(v)) return v.length === 0 || v.every(x => String(x).trim() === "");
+  return String(v).trim() === "";
+}
+    function showToast(message, type = "success") {
+      const c = document.getElementById("toast-container");
+      const el = document.createElement("div");
+      const ok = type === "success";
+      const info = type === "info";
+      el.className = `${ok ? "bg-[#06C755]" : info ? "bg-theme-brown" : "bg-red-500"} text-white px-5 py-2.5 rounded-full shadow-lg text-sm font-bold opacity-0 -translate-y-2 transition`;
+      el.innerHTML = message;
+      c.appendChild(el);
+      requestAnimationFrame(() => {
+        el.classList.remove("opacity-0", "-translate-y-2");
+      });
+      setTimeout(() => {
+        el.classList.add("opacity-0", "-translate-y-2");
+        setTimeout(() => el.remove(), 300);
+      }, 2200);
+    }
+
+    // ===== 登入/權限 =====
+    function switchRole(role) {
+      currentRole = role;
+      const a = document.getElementById("role-admin");
+      const s = document.getElementById("role-staff");
+      const active = "flex-1 py-2.5 rounded-xl text-sm font-bold bg-white text-theme-brown border border-theme-brown/30 shadow-sm flex items-center justify-center gap-2";
+      const inactive = "flex-1 py-2.5 rounded-xl text-sm font-bold text-theme-sub hover:bg-white/70 flex items-center justify-center gap-2";
+
+      if (role === "admin") {
+        a.className = active; s.className = inactive;
+        document.getElementById("password").placeholder = "請輸入管理員密碼";
+      } else {
+        s.className = active; a.className = inactive;
+        document.getElementById("password").placeholder = "請輸入員工密碼";
+      }
+      document.getElementById("password").value = "";
+      lucide.createIcons();
+    }
+
+    async function checkSession() {
+      const { data: { session } } = await _supabase.auth.getSession();
+      if (!session) return;
+
+      const email = session.user?.email || "";
+      if (email === ACCOUNTS.admin) currentRole = "admin";
+      else if (email === ACCOUNTS.staff) currentRole = "staff";
+      else {
+        await _supabase.auth.signOut();
+        return;
+      }
+      showDashboard();
+    }
+
+    async function handleLogin() {
+      const btn = document.getElementById("login-btn");
+      const pwd = document.getElementById("password").value.trim();
+      const email = ACCOUNTS[currentRole];
+      if (!pwd) return showToast("請輸入密碼", "error");
+
+      btn.disabled = true;
+      btn.textContent = "登入中...";
+      const { error } = await _supabase.auth.signInWithPassword({ email, password: pwd });
+      btn.disabled = false;
+      btn.textContent = "登入系統";
+
+      if (error) {
+        showToast("密碼錯誤", "error");
+        document.getElementById("password").value = "";
+        return;
+      }
+      showToast("登入成功");
+      showDashboard();
+    }
+
+    async function handleLogout() {
+      await _supabase.auth.signOut();
+      location.reload();
+    }
+
+function showDashboard() {
+  document.getElementById("login-view").classList.add("hidden");
+  document.getElementById("dashboard-view").classList.remove("hidden");
+  document.getElementById("role-badge").textContent = currentRole === "admin" ? "管理員" : "員工";
+
+  const btnChangePwd = document.getElementById("btn-open-change-pwd");
+  if (btnChangePwd) {
+    btnChangePwd.classList.toggle("hidden", currentRole !== "admin");
+  }
+
+  loadData();
+}
+
+    // ===== 資料 =====
+    async function loadData() {
+      const c = document.getElementById("content-area");
+      c.innerHTML = `<div class="text-center py-10 text-theme-sub">載入中...</div>`;
+
+      const { data, error } = await _supabase
+        .from("grooming_orders")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        c.innerHTML = `<div class="text-center py-10 text-red-500">${escapeHtml(error.message)}</div>`;
+        return;
+      }
+      fullDataList = data || [];
+      renderDataList(fullDataList);
+    }
+
+function renderDataList(data) {
+  const c = document.getElementById("content-area");
+  if (!data?.length) {
+    c.innerHTML = `<div class="text-center py-12 text-theme-sub">目前沒有資料</div>`;
+    return;
+  }
+
+  c.innerHTML = data.map(item => {
+    const serviceText = getServiceText(item);
+    const risk = item.aggression === "有攻擊性"
+      ? `<span class="text-[10px] px-2 py-0.5 rounded bg-red-100 text-red-500 font-bold">有攻擊性</span>`
+      : "";
+
+    // ===== 店家備註 =====
+    const noteText = String(item.store_note ?? "").trim();
+    const hasNote = noteText !== "";
+    const noteBadge = hasNote
+      ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-[#EDE9FE] text-[#6D28D9] font-bold border border-[#DDD6FE]">店家備註</span>`
+      : "";
+
+    // 備註預覽（改成簡潔一行，不做輸入框樣式）
+    const notePreview = hasNote
+      ? `<div class="mt-1.5 text-[11px] text-[#6D28D9] leading-relaxed truncate">
+           📝 ${escapeHtml(noteText.replace(/\n/g, " "))}
+         </div>`
+      : "";
+
+    // ===== 照片授權（只認「不願意」）=====
+    const photoValue = String(item.photo ?? "").trim();
+    const photoDenied = photoValue === "不願意";
+
+    const photoDeniedBadge = photoDenied
+      ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-[#FEE2E2] text-[#B91C1C] font-black border border-[#FCA5A5]">照片不同意</span>`
+      : "";
+
+    const leftBorderClass = photoDenied ? "border-l-red-400" : "border-l-transparent";
+
+    return `
+      <div onclick="openModal('${escapeHtml(item.id)}')" class="card-panel-soft p-4 cursor-pointer hover:-translate-y-0.5 transition border-l-4 ${leftBorderClass} hover:border-l-theme-brown">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-full bg-theme-yellowLight text-theme-brownDeep font-black flex items-center justify-center shrink-0 border border-[#EAD9C9]">
+            ${escapeHtml((item.pet_name || "?").slice(0,1))}
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="font-black text-theme-text truncate">${escapeHtml(item.pet_name || "未命名毛孩")}</h3>
+              <span class="text-xs text-theme-sub truncate">(${escapeHtml(item.owner_name || "-")})</span>
+              ${noteBadge}
+              ${photoDeniedBadge}
+            </div>
+
+            <div class="text-xs text-theme-sub mt-1 truncate">${escapeHtml(serviceText)}｜${escapeHtml(item.owner_phone || "-")}</div>
+            <div class="text-[11px] text-theme-sub mt-1">${escapeHtml(formatDate(item.created_at))}</div>
+            ${notePreview}
+          </div>
+
+          ${risk}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  lucide.createIcons();
+}
+
+document.getElementById("search-input").addEventListener("input", (e) => {
+  const t = e.target.value.trim().toLowerCase();
+  const f = fullDataList.filter(i =>
+    (i.pet_name || "").toLowerCase().includes(t) ||
+    (i.owner_name || "").toLowerCase().includes(t) ||
+    (i.owner_phone || "").toLowerCase().includes(t) ||
+    (i.store_note || "").toLowerCase().includes(t)
+  );
+  renderDataList(f);
+});
+
+    // ===== 詳情/編輯 =====
+function openModal(id) {
+  currentItem = fullDataList.find(i => String(i.id) === String(id));
+  if (!currentItem) return;
+
+  document.getElementById("modal-id").textContent = `ID: ${currentItem.id}`;
+  document.getElementById("btn-delete").classList.toggle("hidden", currentRole !== "admin");
+  document.getElementById("btn-edit").textContent = currentRole === "admin" ? "編輯資料" : "編輯服務";
+  document.getElementById("btn-edit").classList.remove("hidden");
+  document.getElementById("btn-save").classList.add("hidden");
+
+  const editableSet = currentRole === "admin" ? ADMIN_EDITABLE : STAFF_EDITABLE;
+
+  let html = "";
+
+/* ===== 店家內部備註（放在最頂端）===== */
+{
+  const noteVal = String(currentItem.store_note ?? "");
+  const noteDisplay = noteVal.trim()
+    ? escapeHtml(noteVal).replace(/\n/g, "<br>")
+    : `<span class="text-theme-sub">尚未填寫</span>`;
+  const noteEditable = editableSet.has("store_note");
+
+  html += `
+    <div class="card-panel-soft p-4">
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <div class="flex items-center gap-2">
+          <i data-lucide="notebook-pen" class="w-4 h-4 text-theme-brown"></i>
+          <span class="text-sm font-extrabold text-theme-text">店家備註</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full bg-[#EADBCB] text-[#6B4F3F] border border-[#D8C2AF] font-extrabold tracking-wide">
+  僅店家可見
+</span>        </div>
+<span class="view-mode text-[10px] px-2 py-0.5 rounded-full bg-[#EFE3D6] text-[#7A5B49] border border-[#DDC8B6] font-bold">
+  點擊下方「編輯資料」即可備註
+</span>
+      </div>
+
+      <div class="view-mode text-sm leading-relaxed text-theme-text bg-white border border-[#EAE2D9] rounded-xl px-3 py-2.5 min-h-[44px]">
+        ${noteDisplay}
+      </div>
+
+      ${noteEditable
+        ? `<textarea
+            data-key="store_note"
+            class="edit-mode hidden input-woof text-sm min-h-[96px]"
+            placeholder="輸入店家內部備註..."
+          >${escapeHtml(noteVal)}</textarea>`
+        : ""
+      }
+    </div>
+  `;
+}
+
+  FIELD_GROUPS.forEach(group => {
+    let groupRows = "";
+
+    group.fields.forEach(key => {
+      const rawVal = currentItem[key];
+      const empty = isBlank(rawVal);
+      const editable = editableSet.has(key);
+
+      // 空值且不可編輯：直接不顯示
+      if (empty && !editable) return;
+
+      const label = FIELD_LABEL[key] || key;
+      const val = toDisplay(rawVal);
+
+      // 空值但可編輯：平常隱藏，進入編輯模式再顯示
+      const hiddenInView = empty ? "hidden empty-edit-only" : "";
+
+      groupRows += `
+        <div class="${["owner_address","preferred_hospital","medical_history","attention_items","pet_personality"].includes(key) ? "sm:col-span-2" : ""} ${hiddenInView}">
+          <label class="block text-[11px] text-theme-sub font-bold mb-1">${escapeHtml(label)}</label>
+          <div class="view-mode text-sm font-semibold min-h-[22px]">${escapeHtml(val)}</div>
+          ${editable
+            ? `<textarea data-key="${escapeHtml(key)}" class="edit-mode hidden input-woof text-sm min-h-[42px]">${escapeHtml(rawVal ?? "")}</textarea>`
+            : ""
+          }
+        </div>
+      `;
+    });
+
+    // 整組都沒資料就不顯示
+    if (!groupRows) return;
+
+    html += `
+      <div class="card-panel-soft overflow-hidden">
+        <div class="px-4 py-2.5 bg-theme-yellowLight border-b border-[#EAD9C9] font-bold text-sm">${group.title}</div>
+        <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          ${groupRows}
+        </div>
+      </div>
+    `;
+  });
+  
+  if (currentItem.signature_url) {
+    html += `
+      <div class="card-panel-soft p-4">
+        <div class="font-bold text-sm mb-2">✍️ 電子簽名</div>
+        <div class="bg-white rounded-xl p-3 border border-dashed border-[#EAD9C9] flex justify-center">
+          <img src="${escapeHtml(currentItem.signature_url)}" class="max-h-28 object-contain" />
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById("modal-content").innerHTML = html;
+  const modal = document.getElementById("detail-modal");
+  const panel = document.getElementById("modal-panel");
+  modal.classList.remove("hidden");
+  setTimeout(() => {
+    modal.classList.remove("opacity-0");
+    panel.classList.remove("translate-y-full", "sm:scale-95");
+  }, 10);
+  lucide.createIcons();
+}
+
+    function closeModal() {
+      const modal = document.getElementById("detail-modal");
+      const panel = document.getElementById("modal-panel");
+      modal.classList.add("opacity-0");
+      panel.classList.add("translate-y-full", "sm:scale-95");
+      setTimeout(() => modal.classList.add("hidden"), 220);
+    }
+
+function enableEdit() {
+  document.querySelectorAll(".view-mode").forEach(el => el.classList.add("hidden"));
+  document.querySelectorAll(".edit-mode").forEach(el => el.classList.remove("hidden"));
+  document.getElementById("btn-edit").classList.add("hidden");
+  document.getElementById("btn-save").classList.remove("hidden");
+  showToast(currentRole === "admin" ? "已進入編輯模式" : "員工可編輯服務與店家備註", "info");
+  document.querySelectorAll(".empty-edit-only").forEach(el => el.classList.remove("hidden"));
+}
+
+    async function saveChanges() {
+      if (!currentItem) return;
+
+      const inputs = Array.from(document.querySelectorAll(".edit-mode[data-key]"));
+      if (!inputs.length) return;
+
+      const updates = {};
+      let changed = 0;
+
+      inputs.forEach(el => {
+        const key = el.dataset.key;
+        const oldVal = String(currentItem[key] ?? "").trim();
+        const newVal = String(el.value ?? "").trim();
+        if (oldVal !== newVal) {
+          updates[key] = newVal;
+          changed++;
+        }
+      });
+
+      if (!changed) {
+        showToast("沒有變更", "info");
+        openModal(currentItem.id);
+        return;
+      }
+
+      const btn = document.getElementById("btn-save");
+      btn.disabled = true;
+      btn.textContent = "儲存中...";
+
+      const { error } = await _supabase
+        .from("grooming_orders")
+        .update(updates)
+        .eq("id", currentItem.id);
+
+      btn.disabled = false;
+      btn.textContent = "儲存變更";
+
+      if (error) {
+        showToast("儲存失敗：" + error.message, "error");
+        return;
+      }
+
+      showToast("資料已更新");
+      closeModal();
+      loadData();
+    }
+
+    async function requestDelete() {
+      if (currentRole !== "admin") return;
+      if (!currentItem) return;
+      if (!confirm(`確定刪除 ${currentItem.pet_name || "此筆資料"}？`)) return;
+
+      const { error } = await _supabase
+        .from("grooming_orders")
+        .delete()
+        .eq("id", currentItem.id);
+
+      if (error) return showToast("刪除失敗：" + error.message, "error");
+      showToast("刪除成功");
+      closeModal();
+      loadData();
+    }
+
+    // ===== 密碼修改（目前登入帳號）=====
+function openChangePasswordModal() {
+  if (currentRole !== "admin") {
+    showToast("只有管理員可變更密碼", "error");
+    return;
+  }
+
+  document.getElementById("cp-old-password").value = "";
+  document.getElementById("cp-new-password").value = "";
+  document.getElementById("cp-confirm-password").value = "";
+
+  const tabAdmin = document.getElementById("cp-tab-admin");
+  const tabStaff = document.getElementById("cp-tab-staff");
+  if (tabAdmin) tabAdmin.classList.add("bg-[#F8F6F3]", "text-theme-text");
+  if (tabStaff) tabStaff.classList.add("opacity-70");
+
+  const m = document.getElementById("change-pwd-modal");
+  m.classList.remove("hidden");
+  setTimeout(() => m.classList.remove("opacity-0"), 10);
+  lucide.createIcons();
+}
+
+    function closeChangePasswordModal() {
+      const m = document.getElementById("change-pwd-modal");
+      m.classList.add("opacity-0");
+      setTimeout(() => m.classList.add("hidden"), 220);
+    }
+
+async function handleChangePassword() {
+  if (currentRole !== "admin") {
+    return showToast("只有管理員可變更密碼", "error");
+  }
+
+  const oldPwd = document.getElementById("cp-old-password").value.trim();
+  const newPwd = document.getElementById("cp-new-password").value.trim();
+  const confirmPwd = document.getElementById("cp-confirm-password").value.trim();
+  const btn = document.getElementById("btn-change-pwd");
+
+  if (!oldPwd || !newPwd || !confirmPwd) return showToast("請填寫完整", "error");
+  if (newPwd.length < 6) return showToast("新密碼至少 6 碼", "error");
+  if (newPwd !== confirmPwd) return showToast("新密碼與確認不一致", "error");
+
+  const user = (await _supabase.auth.getUser()).data.user;
+  if (!user?.email) return showToast("登入狀態失效，請重新登入", "error");
+
+  if (user.email !== ACCOUNTS.admin) {
+    return showToast("僅允許管理員主帳號修改密碼", "error");
+  }
+
+  btn.disabled = true;
+  btn.textContent = "驗證中...";
+
+  const verify = await _supabase.auth.signInWithPassword({ email: user.email, password: oldPwd });
+  if (verify.error) {
+    btn.disabled = false;
+    btn.textContent = "確認修改";
+    return showToast("舊密碼錯誤", "error");
+  }
+
+  btn.textContent = "更新中...";
+  const { error } = await _supabase.auth.updateUser({ password: newPwd });
+  btn.disabled = false;
+  btn.textContent = "確認修改";
+
+  if (error) return showToast("修改失敗：" + error.message, "error");
+
+  showToast("密碼修改成功，請重新登入");
+  await _supabase.auth.signOut();
+  location.reload();
+}
+
+    // ===== UI events =====
+    document.getElementById("detail-modal").addEventListener("click", (e) => {
+      if (e.target.id === "detail-modal") closeModal();
+    });
+    document.getElementById("change-pwd-modal").addEventListener("click", (e) => {
+      if (e.target.id === "change-pwd-modal") closeChangePasswordModal();
+    });
+
+    // ===== 內嵌 SW 程式碼（等同 sw-admin.js）=====
+    const ADMIN_SW_CODE = `
+const CACHE_NAME = "woofmen-admin-v2";
+const APP_SHELL = [
+  "./admin.html",
+  "./manifest-admin.json",
+  "./logo.png",
+  "https://cdn.tailwindcss.com",
+  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
+  "https://unpkg.com/lucide@latest",
+  "https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap"
+];
+
+self.addEventListener("install", (event) => {
+  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+  );
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys.map((key) => {
+        if (key !== CACHE_NAME) return caches.delete(key);
+      })
+    );
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.action === "skipWaiting") {
+    self.skipWaiting();
+  }
+});
+
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  const url = new URL(req.url);
+
+  if (req.method !== "GET") return;
+
+  if (req.mode === "navigate") {
+    event.respondWith((async () => {
+      try {
+        const fresh = await fetch(req);
+        const cache = await caches.open(CACHE_NAME);
+        cache.put("./admin.html", fresh.clone());
+        return fresh;
+      } catch (err) {
+        const cached = await caches.match("./admin.html");
+        return cached || Response.error();
+      }
+    })());
+    return;
+  }
+
+  if (url.origin === self.location.origin) {
+    event.respondWith((async () => {
+      const cached = await caches.match(req);
+      if (cached) {
+        fetch(req).then(async (fresh) => {
+          if (fresh && fresh.status === 200) {
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(req, fresh.clone());
+          }
+        }).catch(() => {});
+        return cached;
+      }
+      try {
+        const fresh = await fetch(req);
+        if (fresh && fresh.status === 200) {
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(req, fresh.clone());
+        }
+        return fresh;
+      } catch (err) {
+        return Response.error();
+      }
+    })());
+    return;
+  }
+
+  event.respondWith((async () => {
+    try {
+      const fresh = await fetch(req);
+      if (fresh && fresh.status === 200) {
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(req, fresh.clone());
+      }
+      return fresh;
+    } catch (err) {
+      const cached = await caches.match(req);
+      return cached || Response.error();
+    }
+  })());
+});
+`;
+
+    async function registerInlineServiceWorker() {
+      if (!("serviceWorker" in navigator)) return;
+      try {
+        const blob = new Blob([ADMIN_SW_CODE], { type: "text/javascript" });
+        const swUrl = URL.createObjectURL(blob);
+        const reg = await navigator.serviceWorker.register(swUrl, { scope: "./" });
+
+        reg.addEventListener("updatefound", () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              newWorker.postMessage({ action: "skipWaiting" });
+            }
+          });
+        });
+
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          window.location.reload();
+        });
+      } catch (e) {
+        console.error("Inline SW register fail:", e);
+      }
+    }
+
+    // init
+    checkSession();
+    registerInlineServiceWorker();
+    lucide.createIcons();
+  </script>
+</body>
+</html>
