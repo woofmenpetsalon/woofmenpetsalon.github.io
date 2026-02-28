@@ -763,7 +763,9 @@
 <div id="home-secret-logo"
      class="w-64 h-64 animate-float cursor-pointer select-none touch-manipulation"
      role="button"
-     aria-label="隱藏管理入口">
+     aria-label="隱藏管理入口"
+     onclick="handleHomeSecretTap(event)"
+     ontouchend="handleHomeSecretTap(event)">
      <img src="logo.png"
           alt="Woofmen 汪們 Logo"
           draggable="false"
@@ -1560,63 +1562,55 @@
         lb.classList.remove('show');
         document.body.style.overflow = '';
     }
+// ===== ✅ 首頁 Logo 隱藏入口（全域函式，給 inline onclick/ontouchend 用）=====
+let __homeSecretTapCount = 0;
+let __homeSecretLastTap = 0;
+let __homeSecretIgnoreClickUntil = 0;
+let __homeSecretJumping = false;
 
-    document.addEventListener("DOMContentLoaded", () => {
-// ===== ✅ 首頁 Logo 連點兩下進 admin（手機/桌機穩定版）=====
-const homeSecretLogo = document.getElementById("home-secret-logo");
-if (homeSecretLogo) {
-    let tapCount = 0;
-    let lastTapTime = 0;
-    let jumping = false;
-    let ignoreClickUntil = 0; // 防止手機 touchend 後又觸發 click 造成重複計數
+function handleHomeSecretTap(e) {
+    // 防止 touchend 之後又觸發 click 重複計算
+    const now = Date.now();
+    const isTouch = e && e.type === "touchend";
+    const isClick = e && e.type === "click";
 
-    const DOUBLE_TAP_GAP = 650; // 兩下最大間隔，手機放寬一點比較好按
-
-    function goAdmin() {
-        if (jumping) return;
-        jumping = true;
-
-        // 用 href 最穩定
-        window.location.href = "admin.html";
-
-        // 保險鎖，避免極端情況重複跳轉
-        setTimeout(() => { jumping = false; }, 1200);
-    }
-
-    function handleSecretTap(e) {
-        // 只在首頁啟用
-        const isHomeActive = document.getElementById("view-home")?.classList.contains("active");
-        if (!isHomeActive) return;
-
-        const now = Date.now();
-
-        // 雙擊判斷
-        if (now - lastTapTime <= DOUBLE_TAP_GAP) {
-            tapCount += 1;
-        } else {
-            tapCount = 1;
-        }
-        lastTapTime = now;
-
-        if (tapCount >= 2) {
-            tapCount = 0;
-            goAdmin();
-        }
-    }
-
-    // 手機觸控：主要事件
-    homeSecretLogo.addEventListener("touchend", (e) => {
+    if (isTouch) {
         e.preventDefault();
-        ignoreClickUntil = Date.now() + 700; // 接下來 700ms 內忽略 click
-        handleSecretTap(e);
-    }, { passive: false });
+        __homeSecretIgnoreClickUntil = now + 700;
+    }
+    if (isClick && now < __homeSecretIgnoreClickUntil) {
+        return false;
+    }
 
-    // 桌機/一般點擊：備援事件
-    homeSecretLogo.addEventListener("click", (e) => {
-        if (Date.now() < ignoreClickUntil) return; // 避免 touchend 後的幽靈 click
-        handleSecretTap(e);
-    });
+    // 只在首頁作用
+    const isHomeActive = document.getElementById("view-home")?.classList.contains("active");
+    if (!isHomeActive) return false;
+
+    // 雙擊判斷（手機放寬）
+    const DOUBLE_TAP_GAP = 700;
+    if (now - __homeSecretLastTap <= DOUBLE_TAP_GAP) {
+        __homeSecretTapCount += 1;
+    } else {
+        __homeSecretTapCount = 1;
+    }
+    __homeSecretLastTap = now;
+
+    if (__homeSecretTapCount >= 2) {
+        __homeSecretTapCount = 0;
+        if (__homeSecretJumping) return false;
+        __homeSecretJumping = true;
+
+        // 改成絕對路徑更穩定
+        window.location.assign("/admin.html");
+
+        setTimeout(() => {
+            __homeSecretJumping = false;
+        }, 1200);
+    }
+    return false;
 }
+    document.addEventListener("DOMContentLoaded", () => {
+
         // ===== ✅ 舊客查詢與帶入 =====
 const oldCustomerBtn = document.getElementById("old-customer-btn");
 const oldModal = document.getElementById("old-customer-modal");
@@ -2811,7 +2805,7 @@ function closeSigModal(){
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js?v=2").then((reg) => {
+    navigator.serviceWorker.register("./sw.js?v=9").then((reg) => {
 
       // 偵測更新
       reg.addEventListener("updatefound", () => {
