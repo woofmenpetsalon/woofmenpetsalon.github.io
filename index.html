@@ -11,9 +11,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
+            let sigPad = null;
         tailwind.config = { 
             theme: {
                 extend: {
@@ -603,6 +605,114 @@
   pointer-events: none;
   filter: grayscale(0.2);
 }
+/* ===== 舊客選擇彈窗（汪們風格）===== */
+.oldcust-modal{
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.oldcust-modal.show{ display:flex; }
+
+.oldcust-card{
+  width: 100%;
+  max-width: 420px;
+  background: #FFFCF7;
+  border: 2px solid #E6D7CB;
+  border-radius: 24px;
+  box-shadow: 0 20px 45px rgba(141,110,99,.22);
+  overflow: hidden;
+}
+.oldcust-head{
+  padding: 16px 18px;
+  background: linear-gradient(135deg,#A68A7C,#E6C88A);
+  color: white;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.oldcust-head h4{
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+.oldcust-close{
+  width: 30px; height: 30px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255,255,255,.55);
+  display:grid; place-items:center;
+  cursor:pointer;
+  background: rgba(255,255,255,.12);
+}
+.oldcust-body{
+  padding: 14px;
+  max-height: 62vh;
+  overflow: auto;
+  background: #FBF9F6;
+}
+.oldcust-tip{
+  font-size: 12px;
+  color: #8D6E63;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+.oldcust-item{
+  width: 100%;
+  border: 1.5px solid #EAD9C9;
+  background: #fff;
+  border-radius: 16px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: .2s;
+  box-shadow: 0 6px 14px rgba(166,138,124,.08);
+}
+.oldcust-item + .oldcust-item{ margin-top: 10px; }
+.oldcust-item:hover{
+  border-color: #A68A7C;
+  background: #F9F4EE;
+  transform: translateY(-1px);
+}
+.oldcust-name{
+  font-size: 15px;
+  font-weight: 900;
+  color: #7C604E;
+}
+.oldcust-sub{
+  margin-top: 4px;
+  font-size: 12px;
+  color: #A9998E;
+  font-weight: 700;
+}
+.oldcust-empty{
+  border:1.5px dashed #EAD9C9;
+  border-radius: 16px;
+  padding: 18px;
+  text-align: center;
+  color:#A9998E;
+  font-size: 13px;
+  font-weight: 700;
+}
+.oldcust-foot{
+  padding: 12px 14px 14px;
+  border-top: 1px dashed #EAD9C9;
+  background: #fff;
+}
+.oldcust-cancel{
+  width:100%;
+  border: 1.5px solid #EAD9C9;
+  color:#8D6E63;
+  background:#fff;
+  border-radius: 12px;
+  font-weight: 800;
+  padding: 10px 0;
+  cursor:pointer;
+}
+.oldcust-cancel:hover{ background:#F9F4EE; }
 </style>
 </head>
 
@@ -650,9 +760,15 @@
                 <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-theme-yellow/5 rounded-full blur-3xl"></div>
 
                 <div class="relative z-10 mb-6 flex justify-center">
-                    <div class="w-64 h-64 animate-float">
-                         <img src="logo.png" alt="Woofmen 汪們 Logo" class="w-full h-full object-contain transform transition duration-700 group-hover:scale-110 group-hover:rotate-[-2deg]">
-                    </div>
+<div id="home-secret-logo"
+     class="w-64 h-64 animate-float cursor-pointer select-none touch-manipulation"
+     role="button"
+     aria-label="隱藏管理入口">
+     <img src="logo.png"
+          alt="Woofmen 汪們 Logo"
+          draggable="false"
+          class="w-full h-full object-contain transform transition duration-700 group-hover:scale-110 group-hover:rotate-[-2deg]">
+</div>
                 </div>
 
                 <div class="relative z-10 space-y-4 mb-10">
@@ -720,7 +836,7 @@
     <!-- 🔸 主標題卡-->
     <div class="card-panel p-7 rounded-3xl mb-6 text-center relative overflow-hidden">
         <span class="section-pill">GROOMING FORM</span>
-        <h2 class="hero-title">寵物美容預約表單</h2>
+        <h2 class="hero-title">寵物美容表單</h2>
         <p class="hero-sub">✿ 填完後請 LINE 告知毛孩名字與欲預約時間 ✿</p>
     </div>
 
@@ -740,7 +856,7 @@
         <p class="text-xs text-theme-sub mt-3 text-center">點擊圖片可放大查看</p>
     </div>
 
-<form id="grooming-form" class="space-y-6" novalidate>
+<form id="grooming-form" class="space-y-6" onsubmit="event.preventDefault();">
 
 <!-- ✅ 飼主資料 -->
 <div class="card-panel p-6 rounded-2xl space-y-6">
@@ -755,53 +871,48 @@
 
     <!-- 欄位 -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <!-- Email -->
         <div>
             <label class="block text-sm font-bold mb-1 ml-1">電子郵件 (選填)</label>
-            <input type="email" class="form-input" placeholder="寄送契約副本用">
+            <input type="email" name="owner_email" class="form-input" placeholder="寄送契約副本用">
         </div>
 
-        <!-- 姓名 -->
         <div>
             <label class="block text-sm font-bold mb-1 ml-1">主人姓名 <span class="text-red-400">*</span></label>
-            <input type="text" class="form-input" placeholder="請輸入全名" required>
+            <input type="text" name="owner_name" class="form-input" placeholder="請輸入全名" required>
         </div>
 
-        <!-- 電話 + 舊客按鈕 -->
         <div class="sm:col-span-2">
             <label class="block text-sm font-bold mb-1 ml-1">連絡電話 <span class="text-red-400">*</span></label>
             <div class="flex gap-3">
-                <input type="tel" class="form-input flex-1" placeholder="0912345678" required
-       inputmode="numeric" pattern="^09\\d{8}$" maxlength="10">
-                <button type="button"
-                        class="px-4 py-2 rounded-xl bg-theme-brown text-white font-bold text-sm shadow-cute-sm hover:bg-theme-brownDeep transition-all">
-                    舊客
-                </button>
+                <input type="tel" id="owner_phone" name="owner_phone" class="form-input flex-1" placeholder="0912345678" required inputmode="numeric" pattern="09\d{8}" maxlength="10" oninput="this.value=this.value.replace(/[^\d]/g,'')">
+<button type="button" id="old-customer-btn" class="px-4 py-2 rounded-xl bg-theme-brown text-white font-bold text-sm shadow-cute-sm hover:bg-theme-brownDeep transition-all">
+    舊客
+</button>
             </div>
         </div>
 
-        <!-- 身分證 -->
         <div>
             <label class="block text-sm font-bold mb-1 ml-1">身分證字號 <span class="text-red-400">*</span></label>
-            <input type="text" class="form-input" placeholder="例如: A123456789" required>
+            <input type="text" id="owner_id" name="owner_id" class="form-input" placeholder="例如: A123456789" required pattern="[A-Z][12]\d{8}" maxlength="10" oninput="this.value = this.value.toUpperCase()">
         </div>
     </div>
 
     <!-- 地址 -->
     <div>
         <label class="block text-sm font-bold mb-1 ml-1">通訊地址 <span class="text-red-400">*</span></label>
-        <input type="text" class="form-input" placeholder="請輸入完整地址" required>
+        <input type="text" name="owner_address" class="form-input" placeholder="請輸入完整地址" required>
     </div>
 
 <div class="border-t border-dashed border-[#EAE2D9] pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div>
         <label class="block text-sm font-bold mb-1 ml-1 text-red-400">緊急聯絡人姓名 <span class="text-red-400">*</span></label>
-        <input type="text" class="form-input border-red-200 bg-red-50/40" placeholder="請輸入姓名" required>
+        <input type="text" name="emergency_name" class="form-input border-red-200 bg-red-50/40" placeholder="請輸入姓名" required>
     </div>
-    <div>
+<div>
         <label class="block text-sm font-bold mb-1 ml-1 text-red-400">緊急連絡電話 <span class="text-red-400">*</span></label>
-        <input type="tel" class="form-input border-red-200 bg-red-50/40" placeholder="0912345678" required
-               inputmode="numeric" pattern="^09\\d{8}$" maxlength="10">
+        <input type="tel" id="emergency_phone" name="emergency_phone" class="form-input border-red-200 bg-red-50/40" placeholder="0912345678" required
+               inputmode="numeric" pattern="09\d{8}" maxlength="10"
+               oninput="this.value=this.value.replace(/[^\d]/g,'')">
     </div>
 </div>
 </div>
@@ -817,17 +928,17 @@
 
     <!-- 基本 -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-            <label class="block text-sm font-bold mb-1 ml-1">寵物名字 <span class="text-red-400">*</span></label>
-            <input type="text" class="form-input" required>
-        </div>
-        <div>
-            <label class="block text-sm font-bold mb-1 ml-1">品種 <span class="text-red-400">*</span></label>
-            <input type="text" class="form-input" required>
-        </div>
+<div>
+                            <label class="block text-sm font-bold mb-1 ml-1">寵物名字 <span class="text-red-400">*</span></label>
+                            <input type="text" name="pet_name" class="form-input" placeholder="如：豆豆" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold mb-1 ml-1">品種 <span class="text-red-400">*</span></label>
+                            <input type="text" name="pet_breed" class="form-input" placeholder="如：柴犬" required>
+                        </div>
         <div>
             <label class="block text-sm font-bold mb-1 ml-1">體重 (kg) <span class="text-red-400">*</span></label>
-            <input type="number" class="form-input" required>
+            <input type="number" name="pet_weight" class="form-input" required>
         </div>
 
         <!-- 年齡 -->
@@ -839,12 +950,12 @@
             </div>
             <div id="age-over">
                 <div class="relative">
-                    <input type="number" id="age-year" class="form-input pr-10" placeholder="請輸入數字">
+                    <input type="number" id="age-year" name="age_year" class="form-input pr-10" placeholder="請輸入數字">
                     <span class="absolute right-3 top-1/2 -translate-y-1/2 text-theme-sub text-sm font-bold">歲</span>
                 </div>
             </div>
             <div id="age-under" class="hidden">
-                <select id="age-month" class="form-input">
+                <select id="age-month" name="age_month" class="form-input">
                     <option value="">請選擇月齡</option>
                     <option value="1">1 個月</option><option value="2">2 個月</option>
                     <option value="3">3 個月</option><option value="4">4 個月</option>
@@ -862,12 +973,12 @@
         <div>
             <label class="block text-sm font-bold mb-2 ml-1">性別 <span class="text-red-400">*</span></label>
 <div class="flex gap-3 flex-wrap">
+<label class="pill-option">
+                                        <input type="radio" name="pet_sex" value="公" required>
+                                        <span>公</span>
+                                    </label>
     <label class="pill-option">
-        <input type="radio" name="sex" required>
-        <span>公</span>
-    </label>
-    <label class="pill-option">
-        <input type="radio" name="sex">
+        <input type="radio" name="pet_sex" value="母">
         <span>母</span>
     </label>
 </div>
@@ -876,11 +987,11 @@
             <label class="block text-sm font-bold mb-2 ml-1">結紮 <span class="text-red-400">*</span></label>
 <div class="flex gap-3 flex-wrap">
     <label class="pill-option">
-        <input type="radio" name="fix" required>
+        <input type="radio" name="fix" value="已結紮" required>
         <span>是</span>
     </label>
     <label class="pill-option">
-        <input type="radio" name="fix">
+        <input type="radio" name="fix" value="未結紮">
         <span>否</span>
     </label>
 </div>
@@ -893,28 +1004,28 @@
     <label class="block text-sm font-bold mb-2 ml-1">晶片狀態 <span class="text-red-400">*</span></label>
 <div class="flex gap-3 flex-wrap">
     <label class="pill-option">
-        <input type="radio" name="chip" value="has" required>
+        <input type="radio" name="chip" value="有晶片" required>
         <span>有晶片</span>
     </label>
     <label class="pill-option">
-        <input type="radio" name="chip" value="unknown">
+        <input type="radio" name="chip" value="晶片號碼不詳">
         <span>有晶片(號碼不詳)</span>
     </label>
     <label class="pill-option">
-        <input type="radio" name="chip" value="none">
+        <input type="radio" name="chip" value="無晶片">
         <span>無晶片</span>
     </label>
 </div>
 
     <!-- ✅ 有晶片時才顯示 -->
-    <input id="chip-number-input" type="text" class="form-input mt-3 hidden"
+    <input id="chip-number-input" name="chip_number" type="text" class="form-input mt-3 hidden"
            placeholder="請輸入完整晶片號碼">
 </div>
 
     <!-- 指定醫院 -->
     <div>
         <label class="block text-sm font-bold mb-1 ml-1">指定就醫診療機構 (若未填寫，則送往特約醫院)</label>
-        <input type="text" class="form-input" placeholder="若未填寫則由店家指定">
+        <input type="text" name="preferred_hospital" class="form-input" placeholder="若未填寫則由店家指定">
 <div class="mt-4 rounded-2xl border border-theme-yellowLight/80 bg-white/80 px-4 py-3 shadow-sm">
     <div class="flex items-center gap-2 text-[11px] font-bold text-theme-brownDeep tracking-widest uppercase">
         <i data-lucide="stethoscope" class="w-4 h-4 text-theme-brown"></i>
@@ -949,11 +1060,11 @@
 
     <div class="flex gap-3">
         <label class="pill-option pill-option--big history-pill">
-            <input type="radio" name="history" value="yes" required>
+            <input type="radio" name="history" value="有" required>
             <span>有</span>
         </label>
         <label class="pill-option pill-option--big history-pill">
-            <input type="radio" name="history" value="no">
+            <input type="radio" name="history" value="無">
             <span>無</span>
         </label>
     </div>
@@ -980,7 +1091,7 @@
         <button type="button" class="history-btn" data-other="true">+ 其他</button>
     </div>
 
-    <input id="history-other-input" type="text" class="form-input mt-3 hidden" placeholder="請填寫其他病史...">
+    <input id="history-other-input" name="history_other" type="text" class="form-input mt-3 hidden" placeholder="請填寫其他病史...">
 </div>
 </div>
 
@@ -998,11 +1109,11 @@
         <div>
 <div class="flex gap-3 flex-wrap">
     <label class="pill-option">
-        <input type="radio" name="friendly_people" required>
+        <input type="radio" name="friendly_people" value="親人" required>
         <span>親人</span>
     </label>
     <label class="pill-option">
-        <input type="radio" name="friendly_people">
+        <input type="radio" name="friendly_people" value="不親人">
         <span>不親人</span>
     </label>
 </div>
@@ -1011,11 +1122,11 @@
 <div id="dog-social">
 <div class="flex gap-3 flex-wrap">
     <label class="pill-option">
-        <input type="radio" name="friendly_dog" required>
+        <input type="radio" name="friendly_dog" value="親狗" required>
         <span>親狗</span>
     </label>
     <label class="pill-option">
-        <input type="radio" name="friendly_dog">
+        <input type="radio" name="friendly_dog" value="不親狗">
         <span>不親狗</span>
     </label>
 </div>
@@ -1028,11 +1139,11 @@
         <div>
 <div class="flex gap-3 flex-wrap">
     <label class="pill-option">
-        <input type="radio" name="aggression" required>
+        <input type="radio" name="aggression" value="有攻擊性" required>
         <span>有攻擊性</span>
     </label>
     <label class="pill-option">
-        <input type="radio" name="aggression">
+        <input type="radio" name="aggression" value="無攻擊性">
         <span>無攻擊性</span>
     </label>
 </div>
@@ -1044,22 +1155,22 @@
         <span class="inline-block text-xs font-bold text-theme-sub bg-theme-yellowLight/60 px-3 py-1 rounded-full">其他個性（可複選）</span>
 <div class="pill-group">
     <label class="pill-option">
-        <input type="checkbox">
+        <input type="checkbox" name="pet_personality" value="易緊張">
         <span>易緊張</span>
     </label>
     <label class="pill-option">
-        <input type="checkbox">
+        <input type="checkbox" name="pet_personality" value="易激動">
         <span>易激動</span>
     </label>
     <label class="pill-option">
-        <input type="checkbox">
+        <input type="checkbox" name="pet_personality" value="易吠叫">
         <span>易吠叫</span>
     </label>
 </div>
 
         <div>
             <label class="block text-sm font-bold mb-1 ml-1">其他：</label>
-            <input type="text" class="form-input" placeholder="其他個性請填寫...">
+            <input type="text" name="pet_personality_other" class="form-input" placeholder="其他個性請填寫...">
         </div>
     </div>
 
@@ -1068,17 +1179,17 @@
         <label class="block text-sm font-bold mb-2 ml-1">美容性情與攻擊性評估 *</label>
 <div class="space-y-2">
     <label class="choice-card">
-        <input type="radio" name="temperament" required>
+        <input type="radio" name="temperament" value="天使寶寶" required>
         <span class="choice-card__body">😇 天使寶寶：個性溫和，無任何攻擊紀錄，也不怕生。</span>
     </label>
 
     <label class="choice-card">
-        <input type="radio" name="temperament">
+        <input type="radio" name="temperament" value="有點緊張">
         <span class="choice-card__body">😓 有點緊張：膽小怕生，可能會低吼或閃躲，但未曾咬人。</span>
     </label>
 
     <label class="choice-card">
-        <input type="radio" name="temperament">
+        <input type="radio" name="temperament" value="敏感寶寶">
         <span class="choice-card__body"><span class="warn">🤬 敏感寶寶：特定部位敏感或曾有攻擊紀錄 (請務必告知)。</span></span>
     </label>
 </div>
@@ -1095,7 +1206,7 @@
 
     <div class="service-grid">
         <label class="service-card">
-            <input type="radio" name="service" value="deposit" required>
+            <input type="radio" name="service" value="儲值洗澡" required>
             <div class="service-card__body">
                 <div class="service-icon"><i data-lucide="calendar"></i></div>
                 <div class="service-text">儲值洗澡</div>
@@ -1103,7 +1214,7 @@
         </label>
 
         <label class="service-card">
-            <input type="radio" name="service" value="daily">
+            <input type="radio" name="service" value="日常光澤洗">
             <div class="service-card__body">
                 <div class="service-icon"><i data-lucide="droplet"></i></div>
                 <div class="service-text">日常光澤洗</div>
@@ -1111,7 +1222,7 @@
         </label>
 
         <label class="service-card">
-            <input type="radio" name="service" value="makeover">
+            <input type="radio" name="service" value="煥新大改造">
             <div class="service-card__body">
                 <div class="service-icon"><i data-lucide="sparkles"></i></div>
                 <div class="service-text">煥新大改造</div>
@@ -1119,7 +1230,7 @@
         </label>
 
         <label class="service-card">
-            <input type="radio" name="service" value="partial">
+            <input type="radio" name="service" value="局部修剪">
             <div class="service-card__body">
                 <div class="service-icon"><i data-lucide="scissors"></i></div>
                 <div class="service-text">局部修剪</div>
@@ -1127,7 +1238,7 @@
         </label>
 
         <label class="service-card service-card--wide">
-            <input type="radio" name="service" value="other">
+            <input type="radio" name="service" value="其他項目">
             <div class="service-card__body service-card__body--wide">
                 <div class="flex items-center gap-3">
                     <div class="service-icon"><i data-lucide="more-horizontal"></i></div>
@@ -1138,7 +1249,7 @@
         </label>
     </div>
 
-    <input id="service-other-input" type="text" class="form-input hidden"
+    <input id="service-other-input" name="service_other" type="text" class="form-input hidden"
            placeholder="請說明服務內容（例如：剪指甲、清耳朵...）">
 </div>
 <!-- ✅ 預計接回時間 -->
@@ -1152,7 +1263,7 @@
 
     <div class="pickup-choice">
         <label class="pickup-option">
-            <input type="radio" name="pickup" value="later" required>
+            <input type="radio" name="pickup" value="另行通知" required>
             <span class="pickup-pill">
                 <i data-lucide="bell" class="w-4 h-4"></i>
                 另行通知
@@ -1160,7 +1271,7 @@
         </label>
 
         <label class="pickup-option">
-            <input type="radio" name="pickup" value="time">
+            <input type="radio" name="pickup" value="選擇時間">
             <span class="pickup-pill">
                 <i data-lucide="clock-3" class="w-4 h-4"></i>
                 選擇時間
@@ -1182,46 +1293,57 @@
                 <div class="card-panel p-6 rounded-2xl space-y-4">
                     <h3 class="font-bold text-theme-brownDeep border-b-2 border-dashed border-[#EAE2D9] pb-2">皮膚狀況 *</h3>
 <div class="space-y-2">
-    <label class="flex items-center gap-2"><input type="radio" name="skin" class="custom-radio" value="none" required>完全不會抓癢</label>
-    <label class="flex items-center gap-2"><input type="radio" name="skin" class="custom-radio" value="sometimes">偶爾抓癢</label>
-    <label class="flex items-center gap-2"><input type="radio" name="skin" class="custom-radio" value="often">抓癢頻率高</label>
-    <label class="flex items-center gap-2"><input type="radio" name="skin" class="custom-radio" value="other" id="skin-other-radio">其他</label>
+    <label class="flex items-center gap-2"><input type="radio" name="skin" class="custom-radio" value="完全不會抓癢" required>完全不會抓癢</label>
+    <label class="flex items-center gap-2"><input type="radio" name="skin" class="custom-radio" value="偶爾抓癢">偶爾抓癢</label>
+    <label class="flex items-center gap-2"><input type="radio" name="skin" class="custom-radio" value="抓癢頻率高">抓癢頻率高</label>
+    <label class="flex items-center gap-2"><input type="radio" name="skin" class="custom-radio" value="其他" id="skin-other-radio">其他</label>
 </div>
 
 <!-- ✅ 其他輸入框 -->
-<input id="skin-other-input" type="text" class="form-input mt-3 hidden" placeholder="請描述皮膚狀況...">
+<input id="skin-other-input" name="skin_other" type="text" class="form-input mt-3 hidden" placeholder="請描述皮膚狀況...">
                 </div>
 
                 <!-- ✅ 注意事項 -->
                 <div class="card-panel p-6 rounded-2xl space-y-4">
-                    <h3 class="font-bold text-theme-brownDeep border-b-2 border-dashed border-[#EAE2D9] pb-2">需要注意的地方</h3>
+                    <h3 class="font-bold text-theme-brownDeep border-b-2 border-dashed border-[#EAE2D9] pb-2">需要注意的地方(可複選)</h3>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="flex items-center gap-2"><input type="checkbox" class="custom-checkbox">怕水</label>
-                        <label class="flex items-center gap-2"><input type="checkbox" class="custom-checkbox">怕吹風</label>
-                        <label class="flex items-center gap-2"><input type="checkbox" class="custom-checkbox">不喜歡擠肛門腺</label>
-                        <label class="flex items-center gap-2"><input type="checkbox" class="custom-checkbox">不喜歡剪指甲</label>
-                        <label class="flex items-center gap-2"><input type="checkbox" class="custom-checkbox">不喜歡梳毛</label>
-                        <label class="flex items-center gap-2"><input type="checkbox" class="custom-checkbox">攻擊咬人</label>
-<label class="flex items-center gap-2">
-  <input type="checkbox" class="custom-checkbox" id="attention-other-check">
-  其他
-</label>
-<input id="attention-other-input" type="text" class="form-input hidden" placeholder="請填寫其他注意事項...">
-                    </div>
+    <label class="flex items-center gap-2">
+        <input type="checkbox" name="attention_items" class="custom-checkbox" value="怕水">怕水
+    </label>
+    <label class="flex items-center gap-2">
+        <input type="checkbox" name="attention_items" class="custom-checkbox" value="怕吹風">怕吹風
+    </label>
+    <label class="flex items-center gap-2">
+        <input type="checkbox" name="attention_items" class="custom-checkbox" value="不喜歡擠肛門腺">不喜歡擠肛門腺
+    </label>
+    <label class="flex items-center gap-2">
+        <input type="checkbox" name="attention_items" class="custom-checkbox" value="不喜歡剪指甲">不喜歡剪指甲
+    </label>
+    <label class="flex items-center gap-2">
+        <input type="checkbox" name="attention_items" class="custom-checkbox" value="不喜歡梳毛">不喜歡梳毛
+    </label>
+    <label class="flex items-center gap-2">
+        <input type="checkbox" name="attention_items" class="custom-checkbox" value="攻擊咬人">攻擊咬人
+    </label>
+    <label class="flex items-center gap-2">
+        <input type="checkbox" name="attention_items" class="custom-checkbox" id="attention-other-check" value="其他">其他
+    </label>
+    <input id="attention-other-input" name="attention_other" type="text" class="form-input hidden" placeholder="請填寫其他注意事項...">
+</div>
                 </div>
 
                 <!-- ✅ 洗澡頻率 -->
                 <div class="card-panel p-6 rounded-2xl space-y-4">
                     <h3 class="font-bold text-theme-brownDeep border-b-2 border-dashed border-[#EAE2D9] pb-2">毛孩洗澡頻率 *</h3>
                     <div class="space-y-2">
-                        <label class="flex items-center gap-2"><input type="radio" name="bath" class="custom-radio" required>固定每週 / 美容院洗</label>
-                        <label class="flex items-center gap-2"><input type="radio" name="bath" class="custom-radio">固定每週 / 在家洗</label>
-                        <label class="flex items-center gap-2"><input type="radio" name="bath" class="custom-radio">固定每月 / 美容院洗</label>
-                        <label class="flex items-center gap-2"><input type="radio" name="bath" class="custom-radio">不固定</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="bath" class="custom-radio" value="固定每週 / 美容院洗" required>固定每週 / 美容院洗</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="bath" class="custom-radio" value="固定每週 / 在家洗">固定每週 / 在家洗</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="bath" class="custom-radio" value="固定每月 / 美容院洗">固定每月 / 美容院洗</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="bath" class="custom-radio" value="不固定">不固定</label>
 <label class="flex items-center gap-2">
-  <input type="radio" name="bath" class="custom-radio" value="other" id="bath-other-radio">
+  <input type="radio" name="bath" class="custom-radio" value="其他" id="bath-other-radio">
   其他
-</label><input id="bath-other-input" type="text" class="form-input hidden" placeholder="請描述洗澡頻率...">
+</label><input id="bath-other-input" name="bath_other" type="text" class="form-input hidden" placeholder="請描述洗澡頻率...">
                     </div>
                 </div>
 
@@ -1230,19 +1352,19 @@
 
     <div>
         <label class="block text-sm font-bold mb-1 ml-1">最近去過的寵物美容店家?</label>
-        <input type="text" class="form-input" placeholder="例如：XX寵物沙龍">
+        <input type="text" name="last_grooming_shop" class="form-input" placeholder="例如：XX寵物沙龍">
     </div>
 
     <div>
-        <label class="block text-sm font-bold mb-1 ml-1">怎麼知道汪們的 ☺</label>
-        <input type="text" class="form-input" placeholder="例如：朋友推薦 / IG / Google">
+        <label class="block text-sm font-bold mb-1 ml-1">怎麼知道汪們的😄</label>
+        <input type="text" name="referral_source" class="form-input" placeholder="例如：朋友推薦 / IG / Google">
     </div>
 
 <div>
     <label class="block text-sm font-bold mb-2 ml-1">願意讓汪們發佈毛孩照片至社群嗎? *</label>
     <div class="photo-choice">
         <label class="photo-card">
-            <input type="radio" name="photo" required>
+            <input type="radio" name="photo" value="願意" required>
             <div class="photo-card__body">
                 <i data-lucide="camera" class="w-4 h-4"></i>
                 <span>我願意!!</span>
@@ -1250,10 +1372,10 @@
             </div>
         </label>
         <label class="photo-card">
-            <input type="radio" name="photo">
+            <input type="radio" name="photo" value="不願意">
             <div class="photo-card__body">
                 <i data-lucide="shield-x" class="w-4 h-4"></i>
-                <span>先不要 ><</span>
+                <span>先不要 ></span>
                 <span class="badge">NO</span>
             </div>
         </label>
@@ -1343,6 +1465,27 @@
         </div>
 
     </main>
+    <!-- ✅ 舊客資料選擇彈窗 -->
+<div id="old-customer-modal" class="oldcust-modal">
+    <div class="oldcust-card" id="old-customer-card">
+        <div class="oldcust-head">
+            <h4 class="flex items-center gap-2">
+                <i data-lucide="history" class="w-4 h-4"></i>
+                舊客資料帶入
+            </h4>
+            <button type="button" id="old-customer-close" class="oldcust-close" aria-label="關閉">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+        <div class="oldcust-body">
+            <div class="oldcust-tip">請選擇要帶入的毛孩資料：</div>
+            <div id="old-customer-list"></div>
+        </div>
+        <div class="oldcust-foot">
+            <button type="button" id="old-customer-cancel" class="oldcust-cancel">僅帶入飼主資料</button>
+        </div>
+    </div>
+</div>
     <!-- ✅ 價目表燈箱 -->
     <div id="price-lightbox" class="lightbox">
         <div class="lightbox-content">
@@ -1353,6 +1496,22 @@
         </div>
     </div>
 <script>
+    // 初始化 Supabase
+    const SUPABASE_URL = 'https://thpjafkziebaklzpwooo.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRocGphZmt6aWViYWtsenB3b29vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzU1MTUsImV4cCI6MjA4NzgxMTUxNX0.wJE3B53IeejPs9tVEljr-g0obYFCt671Hjkr4_xMREo';
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 輔助函式：將簽名 Base64 轉成檔案格式
+    function dataURLtoBlob(dataurl) {
+        const arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while(n--) { u8arr[n] = bstr.charCodeAt(n); }
+        return new Blob([u8arr], {type:mime});
+    }
+
+
     lucide.createIcons();
 
     function switchView(viewId, push = true) {
@@ -1403,14 +1562,449 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+        // ===== ✅ 首頁 Logo 連點兩下進 admin =====
+const homeSecretLogo = document.getElementById("home-secret-logo");
+if (homeSecretLogo) {
+    let lastTap = 0;
+    let tapCount = 0;
+    let jumping = false;
+    const TAP_GAP = 350; // 兩下間隔(ms)
+
+    homeSecretLogo.addEventListener("pointerup", (e) => {
+        // 僅接受左鍵 / 觸控
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        if (jumping) return;
+
+        // 只在首頁啟用
+        const isHomeActive = document.getElementById("view-home")?.classList.contains("active");
+        if (!isHomeActive) return;
+
+        const now = Date.now();
+        if (now - lastTap <= TAP_GAP) {
+            tapCount += 1;
+        } else {
+            tapCount = 1;
+        }
+        lastTap = now;
+
+        if (tapCount >= 2) {
+            jumping = true;
+            tapCount = 0;
+            window.location.assign("./admin.html");
+            setTimeout(() => { jumping = false; }, 800);
+        }
+    }, { passive: true });
+}
+        // ===== ✅ 舊客查詢與帶入 =====
+const oldCustomerBtn = document.getElementById("old-customer-btn");
+const oldModal = document.getElementById("old-customer-modal");
+const oldModalClose = document.getElementById("old-customer-close");
+const oldModalCancel = document.getElementById("old-customer-cancel");
+const oldList = document.getElementById("old-customer-list");
+let lastSearchRows = []; // ✅ 記住本次查詢結果，給「僅帶入飼主資料」使用
+
+function openOldCustomerModal() {
+    oldModal.classList.add("show");
+    document.body.style.overflow = "hidden";
+    lucide.createIcons();
+}
+function closeOldCustomerModal() {
+    oldModal.classList.remove("show");
+    document.body.style.overflow = "";
+    oldModal.style.pointerEvents = "none";
+    setTimeout(() => {
+        oldModal.style.pointerEvents = "";
+    }, 50);
+}
+
+oldModalClose?.addEventListener("click", closeOldCustomerModal);
+oldModalCancel?.addEventListener("click", () => {
+    if (!lastSearchRows || lastSearchRows.length === 0) {
+        closeOldCustomerModal();
+        return;
+    }
+
+    const latest = lastSearchRows[0]; // 已排序新到舊，第一筆最新
+    fillOwnerOnlyFromRecord(latest);
+    closeOldCustomerModal();
+    alert("已僅帶入飼主資料");
+});
+
+// 點背景關閉（點卡片本體不關）
+oldModal?.addEventListener("click", (e) => {
+    if (e.target.id === "old-customer-modal") closeOldCustomerModal();
+});
+
+// ESC 關閉
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && oldModal.classList.contains("show")) {
+        closeOldCustomerModal();
+    }
+});
+
+function formatDateTW(iso) {
+    if (!iso) return "日期未記錄";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return "日期未記錄";
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}/${m}/${day}`;
+}
+
+function formatServiceText(row) {
+    const service = (row.service || "").trim();
+    const serviceOther = (row.service_other || "").trim();
+
+    if (service === "其他項目" && serviceOther) {
+        return `其他項目（${serviceOther}）`;
+    }
+    if (service) return service;
+
+    return "未填";
+}
+
+function fillOwnerOnlyFromRecord(row) {
+    const ownerName = document.querySelector('input[name="owner_name"]');
+    const ownerEmail = document.querySelector('input[name="owner_email"]');
+    const ownerPhone = document.querySelector('input[name="owner_phone"]');
+    const ownerId = document.querySelector('input[name="owner_id"]');
+    const ownerAddress = document.querySelector('input[name="owner_address"]');
+    const emergencyName = document.querySelector('input[name="emergency_name"]');
+    const emergencyPhone = document.querySelector('input[name="emergency_phone"]');
+    const preferredHospital = document.querySelector('input[name="preferred_hospital"]');
+
+    if (ownerName) ownerName.value = row.owner_name || "";
+    if (ownerEmail) ownerEmail.value = row.owner_email || "";
+    if (ownerPhone) ownerPhone.value = row.owner_phone || "";
+    if (ownerId) ownerId.value = row.owner_id || "";
+    if (ownerAddress) ownerAddress.value = row.owner_address || "";
+    if (emergencyName) emergencyName.value = row.emergency_name || "";
+    if (emergencyPhone) emergencyPhone.value = row.emergency_phone || "";
+    if (preferredHospital) preferredHospital.value = row.preferred_hospital || "";
+
+    document.getElementById("grooming-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function setRadioValue(name, value) {
+    if (!value) return;
+    const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
+    if (radio) {
+        radio.checked = true;
+        radio.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+}
+
+function parseMultiValue(raw) {
+    if (raw == null) return [];
+    if (Array.isArray(raw)) {
+        return raw.map(v => String(v).trim()).filter(Boolean);
+    }
+    if (typeof raw === "object") {
+        return Object.values(raw).map(v => String(v).trim()).filter(Boolean);
+    }
+    return String(raw)
+        .split(/[、,，]/)
+        .map(s => s.trim())
+        .filter(Boolean);
+}
+
+function setCheckboxValues(name, raw) {
+    const values = parseMultiValue(raw);
+    const boxes = document.querySelectorAll(`input[name="${name}"][type="checkbox"]`);
+
+    boxes.forEach(cb => {
+        cb.checked = values.includes(cb.value);
+        cb.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    return values;
+}
+
+function fillFormFromRecord(row) {
+    // =========================
+    // 1) 飼主
+    // =========================
+    const ownerName = document.querySelector('input[name="owner_name"]');
+    const ownerEmail = document.querySelector('input[name="owner_email"]');
+    const ownerPhone = document.querySelector('input[name="owner_phone"]');
+    const ownerId = document.querySelector('input[name="owner_id"]');
+    const ownerAddress = document.querySelector('input[name="owner_address"]');
+    const emergencyName = document.querySelector('input[name="emergency_name"]');
+    const emergencyPhone = document.querySelector('input[name="emergency_phone"]');
+    const preferredHospital = document.querySelector('input[name="preferred_hospital"]');
+
+    if (ownerName) ownerName.value = row.owner_name || "";
+    if (ownerEmail) ownerEmail.value = row.owner_email || "";
+    if (ownerPhone) ownerPhone.value = row.owner_phone || "";
+    if (ownerId) ownerId.value = row.owner_id || "";
+    if (ownerAddress) ownerAddress.value = row.owner_address || "";
+    if (emergencyName) emergencyName.value = row.emergency_name || "";
+    if (emergencyPhone) emergencyPhone.value = row.emergency_phone || "";
+    if (preferredHospital) preferredHospital.value = row.preferred_hospital || "";
+
+    // =========================
+    // 2) 寵物基本
+    // =========================
+    const petName = document.querySelector('input[name="pet_name"]');
+    const petBreed = document.querySelector('input[name="pet_breed"]');
+    const petWeight = document.querySelector('input[name="pet_weight"]');
+
+    if (petName) petName.value = row.pet_name || "";
+    if (petBreed) petBreed.value = row.pet_breed || "";
+    if (petWeight) petWeight.value = row.pet_weight ?? "";
+
+    // 年齡（觸發既有按鈕邏輯）
+    const ageOverBtn = document.querySelector('.age-btn[data-age="over"]');
+    const ageUnderBtn = document.querySelector('.age-btn[data-age="under"]');
+    const ageYear = document.getElementById("age-year");
+    const ageMonth = document.getElementById("age-month");
+
+    if (row.age_month) {
+        ageUnderBtn?.click();
+        if (ageMonth) ageMonth.value = row.age_month;
+    } else {
+        ageOverBtn?.click();
+        if (ageYear) ageYear.value = row.age_year ?? "";
+    }
+
+    setRadioValue("pet_sex", row.pet_sex);
+    setRadioValue("fix", row.fix);
+    setRadioValue("chip", row.chip);
+
+    const chipInput = document.getElementById("chip-number-input");
+    if (chipInput) chipInput.value = row.chip_number || "";
+
+    // =========================
+    // 3) 病史（保留你原本邏輯）
+    // =========================
+    setRadioValue("history", row.history);
+
+    document.querySelectorAll(".history-btn.active").forEach(btn => btn.classList.remove("active"));
+    const historyOtherInput = document.getElementById("history-other-input");
+    if (historyOtherInput) {
+        historyOtherInput.value = "";
+        historyOtherInput.classList.add("hidden");
+    }
+
+    let mh = "";
+    if (Array.isArray(row.medical_history)) {
+        mh = row.medical_history.map(v => String(v ?? "").trim()).filter(Boolean).join("、");
+    } else if (row.medical_history && typeof row.medical_history === "object") {
+        mh = String(row.medical_history.text || row.medical_history.value || "").trim();
+    } else {
+        mh = String(row.medical_history ?? "").trim();
+    }
+
+    if (mh && mh !== "無") {
+        const parts = mh.split("、").map(s => s.trim()).filter(Boolean);
+
+        parts.forEach(part => {
+            if (part.startsWith("其他:")) {
+                const txt = part.replace("其他:", "").trim();
+                const otherBtn = document.querySelector('.history-btn[data-other="true"]');
+                if (otherBtn) otherBtn.classList.add("active");
+                if (historyOtherInput) {
+                    historyOtherInput.value = txt;
+                    historyOtherInput.classList.remove("hidden");
+                }
+            } else {
+                const targetBtn = Array.from(document.querySelectorAll(".history-btn"))
+                    .find(btn => btn.innerText.trim() === part);
+                if (targetBtn) targetBtn.classList.add("active");
+            }
+        });
+    }
+
+    // =========================
+    // 4) 毛孩個性與攻擊性評估（你要求新增）
+    // =========================
+    setRadioValue("friendly_people", row.friendly_people);
+    setRadioValue("friendly_dog", row.friendly_dog);
+    setRadioValue("aggression", row.aggression);
+
+    // 其他個性（可複選）
+    setCheckboxValues("pet_personality", row.pet_personality);
+
+    const petPersonalityOtherInput = document.querySelector('input[name="pet_personality_other"]');
+    if (petPersonalityOtherInput) {
+        petPersonalityOtherInput.value = row.pet_personality_other || "";
+    }
+
+    // 美容性情與攻擊性評估
+    setRadioValue("temperament", row.temperament);
+
+    // =========================
+    // 5) 皮膚狀況（你要求新增）
+    // =========================
+    setRadioValue("skin", row.skin);
+
+    const skinOtherInput = document.getElementById("skin-other-input");
+    if (skinOtherInput) {
+        skinOtherInput.value = row.skin_other || "";
+        if (row.skin === "其他") {
+            skinOtherInput.classList.remove("hidden");
+        } else {
+            skinOtherInput.classList.add("hidden");
+        }
+    }
+
+    // =========================
+    // 6) 注意事項（可複選）（你要求新增）
+    // =========================
+    const attValues = setCheckboxValues("attention_items", row.attention_items);
+
+    const attentionOtherCheck = document.getElementById("attention-other-check");
+    const attentionOtherInput = document.getElementById("attention-other-input");
+    if (attentionOtherCheck) {
+        const hasOther = attValues.includes("其他") || !!(row.attention_other && String(row.attention_other).trim());
+        attentionOtherCheck.checked = hasOther;
+        attentionOtherCheck.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    if (attentionOtherInput) {
+        attentionOtherInput.value = row.attention_other || "";
+    }
+
+    // =========================
+    // 7) 洗澡頻率（你要求新增）
+    // =========================
+    setRadioValue("bath", row.bath);
+
+    const bathOtherInput = document.getElementById("bath-other-input");
+    if (bathOtherInput) {
+        bathOtherInput.value = row.bath_other || "";
+        if (row.bath === "其他") {
+            bathOtherInput.classList.remove("hidden");
+        } else {
+            bathOtherInput.classList.add("hidden");
+        }
+    }
+
+    // =========================
+    // 8) 其他補充 + 照片同意（你要求新增）
+    // =========================
+    const lastShopInput = document.querySelector('input[name="last_grooming_shop"]');
+    const referralInput = document.querySelector('input[name="referral_source"]');
+
+    if (lastShopInput) lastShopInput.value = row.last_grooming_shop || "";
+    if (referralInput) referralInput.value = row.referral_source || "";
+
+    setRadioValue("photo", row.photo);
+
+    // 捲動到表單上方
+    document.getElementById("grooming-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderOldCustomerList(rows) {
+    if (!oldList) return;
+
+    if (!rows || rows.length === 0) {
+        oldList.innerHTML = `<div class="oldcust-empty">查無可帶入資料</div>`;
+        return;
+    }
+
+    oldList.innerHTML = "";
+
+    rows.forEach((row) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "oldcust-item";
+btn.innerHTML = `
+    <div class="oldcust-name">${row.pet_name || "未命名毛孩"} | ${row.pet_breed || "未填"}</div>
+    <div class="oldcust-sub">上次服務：${formatServiceText(row)}（${formatDateTW(row.created_at)}）</div>
+`;
+btn.addEventListener("click", () => {
+    // 先關彈窗，避免帶入途中任何錯誤造成視覺卡住
+    closeOldCustomerModal();
+
+    try {
+        fillFormFromRecord(row);
+alert(`已帶入${row.pet_name || "毛孩"}資料，請補充本次服務內容及接回時間`);
+    } catch (e) {
+        console.error(e);
+        alert("資料帶入時發生錯誤，請再試一次");
+    }
+});
+        oldList.appendChild(btn);
+    });
+}
+
+function dedupeByPetName(sortedRows) {
+    const map = new Map();
+    sortedRows.forEach(r => {
+        const key = (r.pet_name || "未命名").trim();
+        if (!map.has(key)) {
+            map.set(key, r); // 已先排序，第一筆就是最新
+        }
+    });
+    return Array.from(map.values());
+}
+
+async function handleOldCustomerSearch() {
+    const phoneInput = document.getElementById("owner_phone");
+    const phone = (phoneInput?.value || "").trim();
+
+    if (!/^09\d{8}$/.test(phone)) {
+        alert("請先輸入正確手機號碼（09 開頭共 10 碼）");
+        phoneInput?.focus();
+        return;
+    }
+
+    const originalText = oldCustomerBtn.innerText;
+    oldCustomerBtn.disabled = true;
+    oldCustomerBtn.innerText = "查詢中...";
+
+    try {
+        const { data, error } = await _supabase
+            .from("grooming_orders")
+            .select("*")
+            .eq("owner_phone", phone);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            alert("查無此手機的舊客資料");
+            return;
+        }
+
+// 新到舊排序
+const sorted = [...data].sort((a, b) => {
+    const ta = new Date(a.created_at || 0).getTime();
+    const tb = new Date(b.created_at || 0).getTime();
+    return tb - ta;
+});
+
+lastSearchRows = sorted; // ✅ 記住完整排序結果（給僅帶入飼主資料）
+
+// 同名毛孩只取最新一筆
+const petRows = dedupeByPetName(sorted);
+
+renderOldCustomerList(petRows);
+openOldCustomerModal();
+    } catch (err) {
+        console.error(err);
+        alert("查詢失敗，請稍後再試");
+    } finally {
+        oldCustomerBtn.disabled = false;
+        oldCustomerBtn.innerText = originalText;
+    }
+}
+
+oldCustomerBtn?.addEventListener("click", handleOldCustomerSearch);
+// ===== ✅ 舊客查詢與帶入 END =====
         const hash = location.hash.replace("#", "") || "home";
         switchView(hash, false);
+        lucide.createIcons();
+
 // ✅ 重簽按鈕邏輯
 document.getElementById("resign-btn").onclick = () => {
     document.getElementById("signature-data").value = "";
     document.getElementById("signature-required").value = "";
     document.getElementById("signature-preview").classList.add("hidden");
     document.getElementById("signature-status").classList.add("hidden");
+
+    // ✅ 清除簽名板內容，避免舊簽名殘留
+    sigPad?.clear();
 
     document.getElementById("open-sign-btn").classList.remove("hidden");
     document.getElementById("resign-btn").classList.add("hidden");
@@ -1442,41 +2036,47 @@ document.getElementById("resign-btn").onclick = () => {
                 if (btn.dataset.age === "over") {
                     ageOver.classList.remove("hidden");
                     ageUnder.classList.add("hidden");
+
                     ageYear.required = true;
+                    ageYear.disabled = false;
+
                     ageMonth.required = false;
+                    ageMonth.disabled = true;
                     ageMonth.value = "";
                 } else {
                     ageOver.classList.add("hidden");
                     ageUnder.classList.remove("hidden");
+
                     ageYear.required = false;
+                    ageYear.disabled = true;
                     ageYear.value = "";
+
                     ageMonth.required = true;
+                    ageMonth.disabled = false;
                 }
             });
         });
 
         // ✅ 預設一歲以上必填
         ageYear.required = true;
+        ageYear.disabled = false;
+        ageMonth.required = false;
+        ageMonth.disabled = true;
 
-        // ✅ 狗/貓切換顯示「與狗相處」
-        document.querySelectorAll("input[name='pet_type']").forEach(r => {
-            r.addEventListener("change", () => {
-                if (r.value === "dog") {
-                    document.getElementById("dog-social").classList.remove("hidden");
-                } else {
-                    document.getElementById("dog-social").classList.add("hidden");
-                }
-            });
-        });
+        // ✅ 目前表單沒有 pet_type 欄位，維持顯示即可
+        const dogSocial = document.getElementById("dog-social");
+        if (dogSocial) dogSocial.classList.remove("hidden");
 
         // ✅ 病史顯示
         document.querySelectorAll("input[name='history']").forEach(r => {
             r.addEventListener("change", () => {
-                if (r.value === "yes") {
+                if (r.value === "有") {
                     document.getElementById("history-list").classList.remove("hidden");
                 } else {
                     document.getElementById("history-list").classList.add("hidden");
                     document.getElementById("history-other-input").classList.add("hidden");
+                    document.getElementById("history-other-input").value = "";
+                    document.querySelectorAll(".history-btn.active").forEach(btn => btn.classList.remove("active"));
                 }
             });
         });
@@ -1497,10 +2097,12 @@ document.getElementById("resign-btn").onclick = () => {
         document.querySelectorAll("input[name='chip']").forEach(r => {
             r.addEventListener("change", () => {
                 const chipInput = document.getElementById("chip-number-input");
-                if (r.value === "has") {
+                if (r.value === "有晶片") {
                     chipInput.classList.remove("hidden");
+                    chipInput.required = true;
                 } else {
                     chipInput.classList.add("hidden");
+                    chipInput.required = false;
                     chipInput.value = "";
                 }
             });
@@ -1509,10 +2111,12 @@ document.getElementById("resign-btn").onclick = () => {
 document.querySelectorAll("input[name='skin']").forEach(r => {
     r.addEventListener("change", () => {
         const otherInput = document.getElementById("skin-other-input");
-        if (r.value === "other") {
+        if (r.value === "其他") {
             otherInput.classList.remove("hidden");
+            otherInput.required = true;
         } else {
             otherInput.classList.add("hidden");
+            otherInput.required = false;
             otherInput.value = "";
         }
     });
@@ -1524,8 +2128,10 @@ if (attentionOtherCheck) {
     attentionOtherCheck.addEventListener("change", () => {
         if (attentionOtherCheck.checked) {
             attentionOtherInput.classList.remove("hidden");
+            attentionOtherInput.required = true;
         } else {
             attentionOtherInput.classList.add("hidden");
+            attentionOtherInput.required = false;
             attentionOtherInput.value = "";
         }
     });
@@ -1535,10 +2141,12 @@ if (attentionOtherCheck) {
 document.querySelectorAll("input[name='bath']").forEach(r => {
     r.addEventListener("change", () => {
         const bathOtherInput = document.getElementById("bath-other-input");
-        if (r.value === "other") {
+        if (r.value === "其他") {
             bathOtherInput.classList.remove("hidden");
+            bathOtherInput.required = true;
         } else {
             bathOtherInput.classList.add("hidden");
+            bathOtherInput.required = false;
             bathOtherInput.value = "";
         }
     });
@@ -1548,7 +2156,7 @@ document.querySelectorAll("input[name='service']").forEach(r => {
     r.addEventListener("change", () => {
         const otherInput = document.getElementById("service-other-input");
         const selected = document.querySelector("input[name='service']:checked");
-        if (selected && selected.value === "other") {
+        if (selected && selected.value === "其他項目") {
             otherInput.classList.remove("hidden");
             otherInput.required = true;
         } else {
@@ -1563,7 +2171,7 @@ document.querySelectorAll("input[name='pickup']").forEach(r => {
     r.addEventListener("change", () => {
         const timeInput = document.getElementById("pickup-time");
 
-        if (r.value === "later" && r.checked) {
+        if (r.value === "另行通知" && r.checked) {
             // 鎖定
             timeInput.type = "text";
             timeInput.value = "另行通知完成接回時間";
@@ -1571,7 +2179,7 @@ document.querySelectorAll("input[name='pickup']").forEach(r => {
             timeInput.required = false;
             timeInput.classList.add("pickup-locked");
 
-        } else if (r.value === "time" && r.checked) {
+        } else if (r.value === "選擇時間" && r.checked) {
             // 解鎖
             timeInput.type = "time";
             timeInput.value = "";
@@ -1583,7 +2191,6 @@ document.querySelectorAll("input[name='pickup']").forEach(r => {
 });
         // ✅ 條款 + 簽名
         let termsRead = false;
-        let sigPad = null;
 
         const openTermsBtn = document.getElementById("open-terms-btn");
         const termsModal = document.getElementById("terms-modal");
@@ -1733,80 +2340,191 @@ updateSignatureLock();
             document.querySelectorAll(`.field-error-message[data-for="${key}"]`).forEach(m => m.remove());
         }
 
-        form.addEventListener("submit", (e) => {
-            clearAllErrors();
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault(); // 絕對要加上這行，防止 URL 爆掉
+        clearAllErrors();
 
-            const invalids = Array.from(form.querySelectorAll(":invalid"));
+        // 1. 基本欄位驗證
+        const invalids = Array.from(form.querySelectorAll(":invalid"));
+        if (invalids.length > 0) {
+            invalids.forEach(input => {
+                let msg = "此欄位必填";
+                if (input.validity.patternMismatch || input.validity.typeMismatch) msg = "格式不正確";
+                showError(input, msg);
+            });
+            invalids[0].scrollIntoView({ behavior: "smooth", block: "center" });
+            return;
+        }
+// 1.5 病史加強驗證：選「有」時至少要有一項（一般病史按鈕或其他輸入）
+const historyVal = document.querySelector("input[name='history']:checked")?.value;
+const selectedNormalHistoryBtns = Array.from(
+    document.querySelectorAll(".history-btn.active:not([data-other='true'])")
+);
+const historyOtherVal = (document.getElementById("history-other-input")?.value || "").trim();
 
-            if (invalids.length > 0) {
-                invalids.forEach(input => {
-                    let msg = "此欄位必填";
-                    if (input.validity.patternMismatch || input.validity.typeMismatch) msg = "格式不正確";
-                    showError(input, msg);
-                });
+if (historyVal === "有" && selectedNormalHistoryBtns.length === 0 && !historyOtherVal) {
+    alert("您勾選了「有病史」，請至少選擇一項病史或填寫其他。");
+    document.getElementById("history-list")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+}
+        // 2. 條款與簽名檢查（以已確認儲存的 hidden 值為準）
+        const signatureBase64 = document.getElementById("signature-data").value;
+        if (!termsRead || !signatureBase64) {
+            alert("請閱讀條款並完成簽名");
+            document.getElementById("legal").scrollIntoView({ behavior: "smooth" });
+            return;
+        }
 
-                invalids[0].scrollIntoView({ behavior: "smooth", block: "center" });
-                e.preventDefault();
-                return;
-            }
-        });
+        // 3. 開始提交資料到 Supabase
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerText = "提交中...";
+
+        try {
+            const petName = document.querySelector('input[name="pet_name"]')?.value || "未填";
+            
+// 取得表單所有資料
+const formData = new FormData(form);
+const data = Object.fromEntries(formData.entries());
+
+// pickup_time 統一寫入，確保後台可看到
+const pickupChoice = document.querySelector("input[name='pickup']:checked")?.value;
+if (pickupChoice === "另行通知") {
+    data.pickup_time = "另行通知";
+} else {
+    data.pickup_time = (data.pickup_time || "").trim();
+}
+
+// 多選欄位（checkbox）需用 getAll，否則 Object.fromEntries 只會留最後一個
+data.pet_personality = formData.getAll("pet_personality").join("、");
+data.attention_items = formData.getAll("attention_items").join("、");
+
+// 組合 medical_history（含「其他」）
+const historyChoice = document.querySelector("input[name='history']:checked")?.value || "無";
+const selectedHistoryNames = Array.from(
+    document.querySelectorAll(".history-btn.active:not([data-other='true'])")
+).map(btn => btn.innerText.trim());
+const historyOtherText = (document.getElementById("history-other-input")?.value || "").trim();
+
+let medicalHistoryText = "無";
+if (historyChoice === "有") {
+    const merged = [...selectedHistoryNames];
+    if (historyOtherText) {
+        merged.push(`其他:${historyOtherText}`);
+    }
+    medicalHistoryText = merged.join("、");
+}
+
+// 前端簽名 base64 不寫入資料表（避免欄位不存在或資料過大）
+delete data.signature_data;
+
+// 處理簽名圖檔 (轉為 Blob 上傳)
+const signatureBlob = await fetch(signatureBase64).then(res => res.blob());
+// ✅ Storage key 僅使用英數與底線，避免中文檔名造成 Invalid key
+const safePetName = String(petName || "pet")
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "") || "pet";
+
+const fileName = `sig_${Date.now()}_${safePetName}_${Math.random().toString(36).slice(2,8)}.png`;
+
+// A. 上傳圖片
+const { error: uploadError } = await _supabase.storage
+    .from('signatures')
+    .upload(fileName, signatureBlob, {
+        contentType: "image/png",
+        upsert: false
+    });
+if (uploadError) throw uploadError;
+
+const { data: { publicUrl } } = _supabase.storage.from('signatures').getPublicUrl(fileName);
+
+// B. 寫入資料庫
+const { error: dbError } = await _supabase
+    .from('grooming_orders')
+    .insert([{
+        ...data,
+        signature_url: publicUrl,
+        medical_history: medicalHistoryText
+    }]);
+
+            if (dbError) throw dbError;
+
+            alert('提交成功！');
+            location.reload();
+        } catch (err) {
+            console.error(err);
+            alert('提交失敗：' + (err.message || '請檢查網路連線'));
+            submitBtn.disabled = false;
+            submitBtn.innerText = "確認並提交簽署";
+        }
+    });
+
                 // ✅ 一勾就自動取消紅色提示
         form.querySelectorAll("input, select, textarea").forEach(el => {
             el.addEventListener("input", () => clearFieldError(el));
             el.addEventListener("change", () => clearFieldError(el));
         });
-// --- 簽名 ---
-const sigModal = document.getElementById("signature-modal");
-const sigCanvas = document.getElementById("sig-canvas");
+    let savedScrollY = 0;
+    let preventScroll = null;
 
-let savedScrollY = 0;
-let preventScroll = null;
+    const sigModal = document.getElementById("signature-modal");
+    function initSignaturePad() {
+        const canvas = document.getElementById("sig-canvas");
+        if (!canvas) return;
 
-// ✅ 開啟簽名板
-document.getElementById("open-sign-btn").onclick = () => {
-    if (!termsRead) {
-        const tip = document.getElementById("signature-lock-tip");
-        if (tip) tip.classList.remove("hidden");
-
-        const btn = document.getElementById("open-sign-btn");
-        btn.classList.add("lock-shake");
-        setTimeout(() => btn.classList.remove("lock-shake"), 400);
-
-        document.getElementById("open-terms-btn")?.scrollIntoView({ behavior:"smooth", block:"center" });
-        return;
-    }
-
-    savedScrollY = window.scrollY;
-    sigModal.classList.add("show");
-
-    // ✅ 鎖死背景滾動
-    document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${savedScrollY}px`;
-    document.body.style.width = "100%";
-
-    // ✅ 阻止 touchmove 造成畫面滑動
-    preventScroll = (e) => {
-        if (e.target.closest("#signature-modal")) {
-            e.preventDefault();
-        }
-    };
-    document.addEventListener("touchmove", preventScroll, { passive: false });
-
-    setTimeout(() => {
         const ratio = window.devicePixelRatio || 1;
-        sigCanvas.width = sigCanvas.offsetWidth * ratio;
-        sigCanvas.height = sigCanvas.offsetHeight * ratio;
-        sigCanvas.getContext("2d").scale(ratio, ratio);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        const ctx = canvas.getContext("2d");
+        ctx.scale(ratio, ratio);
 
-        sigPad = new SignaturePad(sigCanvas, {
+        // ✅ 使用全域變數 sigPad
+        sigPad = new SignaturePad(canvas, {
             minWidth: 2,
             maxWidth: 4,
             penColor: "#7C604E"
         });
-    }, 100);
-};
+    }
+    // ✅ 開啟簽名板
+    const openSignBtn = document.getElementById("open-sign-btn"); // <--- 在這裡定義一次即可
+    
+    if (openSignBtn) {
+        openSignBtn.onclick = () => {
+            if (!termsRead) {
+                const tip = document.getElementById("signature-lock-tip");
+                if (tip) tip.classList.remove("hidden");
 
+                // ✅ 直接使用外部定義的 openSignBtn
+                openSignBtn.classList.add("lock-shake");
+                setTimeout(() => openSignBtn.classList.remove("lock-shake"), 400);
+
+                document.getElementById("open-terms-btn")?.scrollIntoView({ behavior:"smooth", block:"center" });
+                return;
+            }
+
+            savedScrollY = window.scrollY;
+            sigModal.classList.add("show");
+
+            // ✅ 鎖死背景滾動
+            document.body.style.overflow = "hidden";
+            document.body.style.position = "fixed";
+            document.body.style.top = `-${savedScrollY}px`;
+            document.body.style.width = "100%";
+
+            // ✅ 阻止 touchmove 造成畫面滑動
+            preventScroll = (e) => {
+                if (e.target.closest("#signature-modal")) {
+                    e.preventDefault();
+                }
+            };
+            document.addEventListener("touchmove", preventScroll, { passive: false });
+
+            // ✅ 調用我們剛才定義的初始化函數
+            initSignaturePad();
+        };
+    }
 // ✅ 關閉簽名板
 document.getElementById("sig-close").onclick = () => closeSigModal();
 
@@ -1861,15 +2579,12 @@ function closeSigModal(){
     }
 }
 
-// ✅ 畫布尺寸變化時重新調整
-window.addEventListener("resize", () => {
-    if (!sigModal.classList.contains("show")) return;
-    const ratio = window.devicePixelRatio || 1;
-    sigCanvas.width = sigCanvas.offsetWidth * ratio;
-    sigCanvas.height = sigCanvas.offsetHeight * ratio;
-    sigCanvas.getContext("2d").scale(ratio, ratio);
-    sigPad?.clear();
-});
+    // ✅ 畫布尺寸變化時重新調整
+    window.addEventListener("resize", () => {
+        if (!sigModal.classList.contains("show")) return;
+        // ✅ 直接調用 initSignaturePad，它會自動處理重置
+        initSignaturePad();
+    });
 }); 
 
 </script>
@@ -2070,7 +2785,6 @@ window.addEventListener("resize", () => {
         <button id="sig-clear" class="flex-1 py-3 bg-gray-100 rounded-xl font-bold">重寫</button>
         <button id="sig-save" class="flex-[2] py-3 bg-theme-brown text-white rounded-xl font-bold">確認簽名</button>
     </div>
-</div>
 </div>
 <script>
 if ("serviceWorker" in navigator) {
