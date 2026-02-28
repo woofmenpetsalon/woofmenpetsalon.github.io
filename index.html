@@ -1601,8 +1601,7 @@ function handleHomeSecretTap(e) {
         __homeSecretJumping = true;
 
         // 改成絕對路徑更穩定
-        window.location.assign("/admin.html");
-
+window.location.assign("./admin.html");
         setTimeout(() => {
             __homeSecretJumping = false;
         }, 1200);

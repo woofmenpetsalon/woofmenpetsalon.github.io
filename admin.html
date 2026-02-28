@@ -1100,35 +1100,29 @@ async function handleChangePassword() {
     document.getElementById("auth-modal").addEventListener("click", (e) => {
   if (e.target.id === "auth-modal") closeAuthModal();
 });
-// ===== Service Worker 註冊（使用實體檔 sw-admin.js）=====
-async function registerInlineServiceWorker() {
-  if (!("serviceWorker" in navigator)) return;
-  try {
-    const reg = await navigator.serviceWorker.register("./sw-admin.js?v=1", { scope: "./" });
+// ===== Service Worker 註冊（統一使用 sw.js，避免 scope 衝突）=====
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", async () => {
+    try {
+      const reg = await navigator.serviceWorker.register("./sw.js?v=10");
 
-    reg.addEventListener("updatefound", () => {
-      const newWorker = reg.installing;
-      if (!newWorker) return;
-      newWorker.addEventListener("statechange", () => {
-        if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-          newWorker.postMessage({ action: "skipWaiting" });
-        }
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            newWorker.postMessage({ action: "skipWaiting" });
+          }
+        });
       });
-    });
 
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      window.location.reload();
-    });
-  } catch (e) {
-    console.error("SW register fail:", e);
-  }
-}
-checkSession();
-
-if (location.hostname === "127.0.0.1" || location.hostname === "localhost") {
-  console.log("dev mode: skip service worker");
-} else {
-  registerInlineServiceWorker();
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        window.location.reload();
+      });
+    } catch (e) {
+      console.error("SW register fail:", e);
+    }
+  });
 }
 
 lucide.createIcons();
