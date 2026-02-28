@@ -1562,38 +1562,60 @@
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-        // ===== ✅ 首頁 Logo 連點兩下進 admin =====
+// ===== ✅ 首頁 Logo 連點兩下進 admin（手機/桌機穩定版）=====
 const homeSecretLogo = document.getElementById("home-secret-logo");
 if (homeSecretLogo) {
-    let lastTap = 0;
     let tapCount = 0;
+    let lastTapTime = 0;
     let jumping = false;
-    const TAP_GAP = 350; // 兩下間隔(ms)
+    let ignoreClickUntil = 0; // 防止手機 touchend 後又觸發 click 造成重複計數
 
-    homeSecretLogo.addEventListener("pointerup", (e) => {
-        // 僅接受左鍵 / 觸控
-        if (e.pointerType === "mouse" && e.button !== 0) return;
+    const DOUBLE_TAP_GAP = 650; // 兩下最大間隔，手機放寬一點比較好按
+
+    function goAdmin() {
         if (jumping) return;
+        jumping = true;
 
+        // 用 href 最穩定
+        window.location.href = "admin.html";
+
+        // 保險鎖，避免極端情況重複跳轉
+        setTimeout(() => { jumping = false; }, 1200);
+    }
+
+    function handleSecretTap(e) {
         // 只在首頁啟用
         const isHomeActive = document.getElementById("view-home")?.classList.contains("active");
         if (!isHomeActive) return;
 
         const now = Date.now();
-        if (now - lastTap <= TAP_GAP) {
+
+        // 雙擊判斷
+        if (now - lastTapTime <= DOUBLE_TAP_GAP) {
             tapCount += 1;
         } else {
             tapCount = 1;
         }
-        lastTap = now;
+        lastTapTime = now;
 
         if (tapCount >= 2) {
-            jumping = true;
             tapCount = 0;
-            window.location.assign("./admin.html");
-            setTimeout(() => { jumping = false; }, 800);
+            goAdmin();
         }
-    }, { passive: true });
+    }
+
+    // 手機觸控：主要事件
+    homeSecretLogo.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        ignoreClickUntil = Date.now() + 700; // 接下來 700ms 內忽略 click
+        handleSecretTap(e);
+    }, { passive: false });
+
+    // 桌機/一般點擊：備援事件
+    homeSecretLogo.addEventListener("click", (e) => {
+        if (Date.now() < ignoreClickUntil) return; // 避免 touchend 後的幽靈 click
+        handleSecretTap(e);
+    });
 }
         // ===== ✅ 舊客查詢與帶入 =====
 const oldCustomerBtn = document.getElementById("old-customer-btn");
