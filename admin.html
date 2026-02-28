@@ -136,6 +136,19 @@
       0%,100% { opacity: .4; transform: scale(.9); }
       50% { opacity: 1; transform: scale(1.1); }
     }
+    /* ===== 點擊保護：避免桌機被覆蓋層擋住 ===== */
+.hidden { display: none !important; }
+
+#login-view { isolation: isolate; }
+#login-view .float-layer {
+  z-index: 0 !important;
+  pointer-events: none !important;
+}
+#login-view .card-panel {
+  position: relative;
+  z-index: 20 !important;
+  pointer-events: auto !important;
+}
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -264,23 +277,25 @@
       </button>
     </div>
 
-    <!-- 角色切換外觀（僅展示；實際只有管理員可用） -->
+    <!-- 角色切換 -->
     <div class="bg-[#ECE7E2] rounded-xl p-1 flex mb-4 border border-[#E3DBD3]">
-      <button id="cp-tab-admin" type="button"
+      <button id="cp-tab-admin" type="button" onclick="switchChangePwdTab('admin')"
         class="flex-1 py-2 rounded-lg text-sm font-bold bg-[#F8F6F3] text-theme-text border border-[#DED6CE]">
-        管理員 (自己)
+        管理員
       </button>
-      <button id="cp-tab-staff" type="button"
-        class="flex-1 py-2 rounded-lg text-sm font-bold text-theme-sub opacity-70 cursor-not-allowed" disabled>
+      <button id="cp-tab-staff" type="button" onclick="switchChangePwdTab('staff')"
+        class="flex-1 py-2 rounded-lg text-sm font-bold text-theme-sub">
         一般員工
       </button>
     </div>
 
     <div class="space-y-3">
-      <input id="cp-old-password" type="password"
-        class="w-full bg-[#EFEDEB] border border-[#E2DDD8] rounded-xl px-4 py-3 text-center text-theme-text placeholder:text-theme-sub/70 focus:outline-none focus:border-theme-brown focus:ring-2 focus:ring-theme-brown/15"
-        placeholder="請輸入管理員舊密碼" />
-      <div class="h-px bg-[#E7E1DB] my-1"></div>
+      <div id="cp-old-wrap">
+        <input id="cp-old-password" type="password"
+          class="w-full bg-[#EFEDEB] border border-[#E2DDD8] rounded-xl px-4 py-3 text-center text-theme-text placeholder:text-theme-sub/70 focus:outline-none focus:border-theme-brown focus:ring-2 focus:ring-theme-brown/15"
+          placeholder="請輸入管理員舊密碼" />
+      </div>
+      <div id="cp-old-divider" class="h-px bg-[#E7E1DB] my-1"></div>
       <input id="cp-new-password" type="password"
         class="w-full bg-[#EFEDEB] border border-[#E2DDD8] rounded-xl px-4 py-3 text-center text-theme-text placeholder:text-theme-sub/70 focus:outline-none focus:border-theme-brown focus:ring-2 focus:ring-theme-brown/15"
         placeholder="新密碼 (至少 6 位)" />
@@ -293,6 +308,34 @@
       class="w-full mt-5 py-3 rounded-xl bg-[#5A4F43] hover:bg-[#4F453B] text-white font-black tracking-wider transition">
       確認修改
     </button>
+  </div>
+</div>
+
+<!-- Admin 二次驗證彈窗 -->
+<div id="auth-modal" class="fixed inset-0 bg-black/40 hidden z-[70] p-4 flex items-center justify-center opacity-0 transition-opacity">
+  <div class="w-full max-w-xs rounded-[20px] p-5 bg-[#F8F6F3] border border-[#EAD9C9] shadow-[0_18px_36px_rgba(141,110,99,0.2)]">
+    <div class="flex items-center justify-between mb-3">
+      <h3 id="auth-title" class="font-black text-lg tracking-wider text-theme-text">二次驗證</h3>
+      <button onclick="closeAuthModal()" class="text-theme-sub hover:text-theme-brown">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <p id="auth-desc" class="text-sm text-theme-sub mb-3">請輸入管理員密碼以繼續</p>
+
+    <input id="auth-password" type="password"
+      class="w-full bg-white border border-[#E2DDD8] rounded-xl px-4 py-3 text-center tracking-widest text-theme-text placeholder:text-theme-sub/70 focus:outline-none focus:border-theme-brown focus:ring-2 focus:ring-theme-brown/15"
+      placeholder="輸入管理員密碼"
+      onkeydown="if(event.key==='Enter') handleAuthConfirm()" />
+
+    <div class="mt-4 grid grid-cols-2 gap-2">
+      <button onclick="closeAuthModal()" class="py-2.5 rounded-xl bg-white border border-[#EAD9C9] font-bold text-theme-sub">
+        取消
+      </button>
+      <button id="auth-confirm-btn" onclick="handleAuthConfirm()" class="py-2.5 rounded-xl bg-theme-brown text-white font-bold">
+        確認
+      </button>
+    </div>
   </div>
 </div>
 
@@ -311,10 +354,15 @@
     };
 
     // ===== 全域狀態 =====
-    let currentRole = "admin";
-    let fullDataList = [];
-    let currentItem = null;
+let currentRole = "admin";
+let fullDataList = [];
+let currentItem = null;
+let changePwdTargetRole = "admin";
 
+// 二次驗證用
+let pendingAction = null;   // "save" | "delete"
+let pendingUpdates = null;  // 儲存時暫存變更內容
+let isLoggingIn = false;    // 防止重複登入請求
     // 可編輯欄位
 const ADMIN_EDITABLE = new Set([
   "owner_email","owner_name","owner_phone","owner_id","owner_address",
@@ -472,26 +520,39 @@ function isBlank(v) {
       showDashboard();
     }
 
-    async function handleLogin() {
-      const btn = document.getElementById("login-btn");
-      const pwd = document.getElementById("password").value.trim();
-      const email = ACCOUNTS[currentRole];
-      if (!pwd) return showToast("請輸入密碼", "error");
+async function handleLogin() {
+  if (isLoggingIn) return; // 防重複點擊/重複事件
+  isLoggingIn = true;
 
-      btn.disabled = true;
-      btn.textContent = "登入中...";
-      const { error } = await _supabase.auth.signInWithPassword({ email, password: pwd });
-      btn.disabled = false;
-      btn.textContent = "登入系統";
+  const btn = document.getElementById("login-btn");
+  const pwd = document.getElementById("password").value.trim();
+  const email = ACCOUNTS[currentRole];
 
-      if (error) {
-        showToast("密碼錯誤", "error");
-        document.getElementById("password").value = "";
-        return;
-      }
-      showToast("登入成功");
-      showDashboard();
+  if (!pwd) {
+    isLoggingIn = false;
+    return showToast("請輸入密碼", "error");
+  }
+
+  btn.disabled = true;
+  btn.textContent = "登入中...";
+
+  try {
+    const { error } = await _supabase.auth.signInWithPassword({ email, password: pwd });
+
+    if (error) {
+      showToast("密碼錯誤", "error");
+      document.getElementById("password").value = "";
+      return;
     }
+
+    showToast("登入成功");
+    showDashboard();
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "登入系統";
+    isLoggingIn = false;
+  }
+}
 
     async function handleLogout() {
       await _supabase.auth.signOut();
@@ -700,7 +761,7 @@ function openModal(id) {
       </div>
     `;
   });
-  
+
   if (currentItem.signature_url) {
     html += `
       <div class="card-panel-soft p-4">
@@ -740,70 +801,206 @@ function enableEdit() {
   document.querySelectorAll(".empty-edit-only").forEach(el => el.classList.remove("hidden"));
 }
 
-    async function saveChanges() {
-      if (!currentItem) return;
+async function saveChanges() {
+  if (!currentItem) return;
 
-      const inputs = Array.from(document.querySelectorAll(".edit-mode[data-key]"));
-      if (!inputs.length) return;
+  const inputs = Array.from(document.querySelectorAll(".edit-mode[data-key]"));
+  if (!inputs.length) return;
 
-      const updates = {};
-      let changed = 0;
+  const updates = {};
+  let changed = 0;
 
-      inputs.forEach(el => {
-        const key = el.dataset.key;
-        const oldVal = String(currentItem[key] ?? "").trim();
-        const newVal = String(el.value ?? "").trim();
-        if (oldVal !== newVal) {
-          updates[key] = newVal;
-          changed++;
-        }
-      });
-
-      if (!changed) {
-        showToast("沒有變更", "info");
-        openModal(currentItem.id);
-        return;
-      }
-
-      const btn = document.getElementById("btn-save");
-      btn.disabled = true;
-      btn.textContent = "儲存中...";
-
-      const { error } = await _supabase
-        .from("grooming_orders")
-        .update(updates)
-        .eq("id", currentItem.id);
-
-      btn.disabled = false;
-      btn.textContent = "儲存變更";
-
-      if (error) {
-        showToast("儲存失敗：" + error.message, "error");
-        return;
-      }
-
-      showToast("資料已更新");
-      closeModal();
-      loadData();
+  inputs.forEach(el => {
+    const key = el.dataset.key;
+    const oldVal = String(currentItem[key] ?? "").trim();
+    const newVal = String(el.value ?? "").trim();
+    if (oldVal !== newVal) {
+      updates[key] = newVal;
+      changed++;
     }
+  });
 
-    async function requestDelete() {
-      if (currentRole !== "admin") return;
-      if (!currentItem) return;
-      if (!confirm(`確定刪除 ${currentItem.pet_name || "此筆資料"}？`)) return;
+  if (!changed) {
+    showToast("沒有變更", "info");
+    openModal(currentItem.id);
+    return;
+  }
 
-      const { error } = await _supabase
-        .from("grooming_orders")
-        .delete()
-        .eq("id", currentItem.id);
+  // 管理員：先二次驗證
+  if (currentRole === "admin") {
+    pendingAction = "save";
+    pendingUpdates = updates;
+    showAuthModal("save");
+    return;
+  }
 
-      if (error) return showToast("刪除失敗：" + error.message, "error");
-      showToast("刪除成功");
-      closeModal();
-      loadData();
-    }
+  // 員工：照原本直接存（只會存可編輯欄位）
+  await executeSave(updates);
+}
 
-    // ===== 密碼修改（目前登入帳號）=====
+async function requestDelete() {
+  if (currentRole !== "admin") return;
+  if (!currentItem) return;
+  if (!confirm(`確定刪除 ${currentItem.pet_name || "此筆資料"}？`)) return;
+
+  pendingAction = "delete";
+  pendingUpdates = null;
+  showAuthModal("delete");
+}
+async function executeSave(updates) {
+  const btn = document.getElementById("btn-save");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "儲存中...";
+  }
+
+  const { error } = await _supabase
+    .from("grooming_orders")
+    .update(updates)
+    .eq("id", currentItem.id);
+
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "儲存變更";
+  }
+
+  if (error) {
+    showToast("儲存失敗：" + error.message, "error");
+    return;
+  }
+
+  showToast("資料已更新");
+  closeModal();
+  loadData();
+}
+
+async function executeDelete() {
+  const { error } = await _supabase
+    .from("grooming_orders")
+    .delete()
+    .eq("id", currentItem.id);
+
+  if (error) {
+    showToast("刪除失敗：" + error.message, "error");
+    return;
+  }
+
+  showToast("刪除成功");
+  closeModal();
+  loadData();
+}
+
+function showAuthModal(actionType) {
+  if (currentRole !== "admin") return;
+
+  const title = document.getElementById("auth-title");
+  const desc = document.getElementById("auth-desc");
+  const pwd = document.getElementById("auth-password");
+
+  if (actionType === "save") {
+    title.textContent = "修改驗證";
+    desc.textContent = "修改資料前，請輸入管理員密碼";
+  } else {
+    title.textContent = "刪除驗證";
+    desc.textContent = "刪除資料前，請輸入管理員密碼";
+  }
+
+  pwd.value = "";
+  const m = document.getElementById("auth-modal");
+  m.classList.remove("hidden");
+  setTimeout(() => {
+    m.classList.remove("opacity-0");
+    pwd.focus();
+  }, 10);
+
+  lucide.createIcons();
+}
+
+function closeAuthModal() {
+  const m = document.getElementById("auth-modal");
+  m.classList.add("opacity-0");
+  setTimeout(() => m.classList.add("hidden"), 220);
+
+  const btn = document.getElementById("auth-confirm-btn");
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "確認";
+  }
+}
+
+async function handleAuthConfirm() {
+  if (currentRole !== "admin") return;
+
+  const pwd = document.getElementById("auth-password").value.trim();
+  const btn = document.getElementById("auth-confirm-btn");
+
+  if (!pwd) return showToast("請輸入管理員密碼", "error");
+
+  btn.disabled = true;
+  btn.textContent = "驗證中...";
+
+  const { error } = await _supabase.auth.signInWithPassword({
+    email: ACCOUNTS.admin,
+    password: pwd
+  });
+
+  if (error) {
+    btn.disabled = false;
+    btn.textContent = "確認";
+    return showToast("驗證失敗：密碼錯誤", "error");
+  }
+
+  closeAuthModal();
+
+  const action = pendingAction;
+  const updates = pendingUpdates;
+
+  pendingAction = null;
+  pendingUpdates = null;
+
+  if (action === "save" && updates) {
+    await executeSave(updates);
+    return;
+  }
+
+  if (action === "delete") {
+    await executeDelete();
+    return;
+  }
+}
+function switchChangePwdTab(role) {
+  if (currentRole !== "admin") {
+    showToast("只有管理員可使用此功能", "error");
+    return;
+  }
+
+  changePwdTargetRole = role;
+
+  const tabAdmin = document.getElementById("cp-tab-admin");
+  const tabStaff = document.getElementById("cp-tab-staff");
+  const oldWrap = document.getElementById("cp-old-wrap");
+  const oldDivider = document.getElementById("cp-old-divider");
+  const oldInput = document.getElementById("cp-old-password");
+
+  const activeClass = "flex-1 py-2 rounded-lg text-sm font-bold bg-[#F8F6F3] text-theme-text border border-[#DED6CE]";
+  const inactiveClass = "flex-1 py-2 rounded-lg text-sm font-bold text-theme-sub";
+
+  if (role === "admin") {
+    if (tabAdmin) tabAdmin.className = activeClass;
+    if (tabStaff) tabStaff.className = inactiveClass;
+    if (oldInput) oldInput.placeholder = "請輸入管理員舊密碼";
+  } else {
+    if (tabStaff) tabStaff.className = activeClass;
+    if (tabAdmin) tabAdmin.className = inactiveClass;
+    if (oldInput) oldInput.placeholder = "請輸入員工舊密碼";
+  }
+
+  // 兩種角色都要輸入舊密碼，所以都顯示
+  if (oldWrap) oldWrap.classList.remove("hidden");
+  if (oldDivider) oldDivider.classList.remove("hidden");
+}
+
+ // ===== 密碼修改（目前登入帳號）=====
 function openChangePasswordModal() {
   if (currentRole !== "admin") {
     showToast("只有管理員可變更密碼", "error");
@@ -814,10 +1011,7 @@ function openChangePasswordModal() {
   document.getElementById("cp-new-password").value = "";
   document.getElementById("cp-confirm-password").value = "";
 
-  const tabAdmin = document.getElementById("cp-tab-admin");
-  const tabStaff = document.getElementById("cp-tab-staff");
-  if (tabAdmin) tabAdmin.classList.add("bg-[#F8F6F3]", "text-theme-text");
-  if (tabStaff) tabStaff.classList.add("opacity-70");
+  switchChangePwdTab("admin");
 
   const m = document.getElementById("change-pwd-modal");
   m.classList.remove("hidden");
@@ -845,33 +1039,55 @@ async function handleChangePassword() {
   if (newPwd.length < 6) return showToast("新密碼至少 6 碼", "error");
   if (newPwd !== confirmPwd) return showToast("新密碼與確認不一致", "error");
 
-  const user = (await _supabase.auth.getUser()).data.user;
-  if (!user?.email) return showToast("登入狀態失效，請重新登入", "error");
-
-  if (user.email !== ACCOUNTS.admin) {
-    return showToast("僅允許管理員主帳號修改密碼", "error");
+  // 再確認目前登入者是 admin
+  const loginUser = (await _supabase.auth.getUser()).data.user;
+  if (!loginUser?.email || loginUser.email !== ACCOUNTS.admin) {
+    return showToast("僅管理員可操作", "error");
   }
 
   btn.disabled = true;
-  btn.textContent = "驗證中...";
+  btn.textContent = "驗證舊密碼...";
 
-  const verify = await _supabase.auth.signInWithPassword({ email: user.email, password: oldPwd });
-  if (verify.error) {
+  try {
+    const targetEmail = ACCOUNTS[changePwdTargetRole];
+    if (!targetEmail) {
+      btn.disabled = false;
+      btn.textContent = "確認修改";
+      return showToast("目標帳號錯誤", "error");
+    }
+
+    // 驗證「目標帳號」舊密碼
+    const { error: signInError } = await _supabase.auth.signInWithPassword({
+      email: targetEmail,
+      password: oldPwd
+    });
+
+    if (signInError) {
+      btn.disabled = false;
+      btn.textContent = "確認修改";
+      return showToast("舊密碼錯誤", "error");
+    }
+
+    // 已切換成目標帳號 session，直接改該帳號密碼
+    btn.textContent = "更新中...";
+    const { error: updateError } = await _supabase.auth.updateUser({ password: newPwd });
+    if (updateError) {
+      btn.disabled = false;
+      btn.textContent = "確認修改";
+      return showToast("修改失敗：" + updateError.message, "error");
+    }
+
     btn.disabled = false;
     btn.textContent = "確認修改";
-    return showToast("舊密碼錯誤", "error");
+    showToast(`${changePwdTargetRole === "admin" ? "管理員" : "員工"}密碼修改成功，請重新登入`);
+    await _supabase.auth.signOut();
+    location.reload();
+
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = "確認修改";
+    showToast("操作失敗：" + (e?.message || "未知錯誤"), "error");
   }
-
-  btn.textContent = "更新中...";
-  const { error } = await _supabase.auth.updateUser({ password: newPwd });
-  btn.disabled = false;
-  btn.textContent = "確認修改";
-
-  if (error) return showToast("修改失敗：" + error.message, "error");
-
-  showToast("密碼修改成功，請重新登入");
-  await _supabase.auth.signOut();
-  location.reload();
 }
 
     // ===== UI events =====
@@ -881,137 +1097,42 @@ async function handleChangePassword() {
     document.getElementById("change-pwd-modal").addEventListener("click", (e) => {
       if (e.target.id === "change-pwd-modal") closeChangePasswordModal();
     });
-
-    // ===== 內嵌 SW 程式碼（等同 sw-admin.js）=====
-    const ADMIN_SW_CODE = `
-const CACHE_NAME = "woofmen-admin-v2";
-const APP_SHELL = [
-  "./admin.html",
-  "./manifest-admin.json",
-  "./logo.png",
-  "https://cdn.tailwindcss.com",
-  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
-  "https://unpkg.com/lucide@latest",
-  "https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap"
-];
-
-self.addEventListener("install", (event) => {
-  self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
-  );
+    document.getElementById("auth-modal").addEventListener("click", (e) => {
+  if (e.target.id === "auth-modal") closeAuthModal();
 });
+// ===== Service Worker 註冊（使用實體檔 sw-admin.js）=====
+async function registerInlineServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.register("./sw-admin.js?v=1", { scope: "./" });
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(
-      keys.map((key) => {
-        if (key !== CACHE_NAME) return caches.delete(key);
-      })
-    );
-    await self.clients.claim();
-  })());
-});
-
-self.addEventListener("message", (event) => {
-  if (event.data && event.data.action === "skipWaiting") {
-    self.skipWaiting();
-  }
-});
-
-self.addEventListener("fetch", (event) => {
-  const req = event.request;
-  const url = new URL(req.url);
-
-  if (req.method !== "GET") return;
-
-  if (req.mode === "navigate") {
-    event.respondWith((async () => {
-      try {
-        const fresh = await fetch(req);
-        const cache = await caches.open(CACHE_NAME);
-        cache.put("./admin.html", fresh.clone());
-        return fresh;
-      } catch (err) {
-        const cached = await caches.match("./admin.html");
-        return cached || Response.error();
-      }
-    })());
-    return;
-  }
-
-  if (url.origin === self.location.origin) {
-    event.respondWith((async () => {
-      const cached = await caches.match(req);
-      if (cached) {
-        fetch(req).then(async (fresh) => {
-          if (fresh && fresh.status === 200) {
-            const cache = await caches.open(CACHE_NAME);
-            cache.put(req, fresh.clone());
-          }
-        }).catch(() => {});
-        return cached;
-      }
-      try {
-        const fresh = await fetch(req);
-        if (fresh && fresh.status === 200) {
-          const cache = await caches.open(CACHE_NAME);
-          cache.put(req, fresh.clone());
+    reg.addEventListener("updatefound", () => {
+      const newWorker = reg.installing;
+      if (!newWorker) return;
+      newWorker.addEventListener("statechange", () => {
+        if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+          newWorker.postMessage({ action: "skipWaiting" });
         }
-        return fresh;
-      } catch (err) {
-        return Response.error();
-      }
-    })());
-    return;
+      });
+    });
+
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      window.location.reload();
+    });
+  } catch (e) {
+    console.error("SW register fail:", e);
   }
+}
+bindLoginEvents();
+checkSession();
 
-  event.respondWith((async () => {
-    try {
-      const fresh = await fetch(req);
-      if (fresh && fresh.status === 200) {
-        const cache = await caches.open(CACHE_NAME);
-        cache.put(req, fresh.clone());
-      }
-      return fresh;
-    } catch (err) {
-      const cached = await caches.match(req);
-      return cached || Response.error();
-    }
-  })());
-});
-`;
+if (location.hostname === "127.0.0.1" || location.hostname === "localhost") {
+  console.log("dev mode: skip service worker");
+} else {
+  registerInlineServiceWorker();
+}
 
-    async function registerInlineServiceWorker() {
-      if (!("serviceWorker" in navigator)) return;
-      try {
-        const blob = new Blob([ADMIN_SW_CODE], { type: "text/javascript" });
-        const swUrl = URL.createObjectURL(blob);
-        const reg = await navigator.serviceWorker.register(swUrl, { scope: "./" });
-
-        reg.addEventListener("updatefound", () => {
-          const newWorker = reg.installing;
-          if (!newWorker) return;
-          newWorker.addEventListener("statechange", () => {
-            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              newWorker.postMessage({ action: "skipWaiting" });
-            }
-          });
-        });
-
-        navigator.serviceWorker.addEventListener("controllerchange", () => {
-          window.location.reload();
-        });
-      } catch (e) {
-        console.error("Inline SW register fail:", e);
-      }
-    }
-
-    // init
-    checkSession();
-    registerInlineServiceWorker();
-    lucide.createIcons();
+lucide.createIcons();
   </script>
 </body>
 </html>
