@@ -1586,7 +1586,8 @@ function showSuccessPage(contractData) {
 }
 
 function backToHomeFromSuccess() {
-    switchView("home");
+    // 強制整頁重載，並回到首頁 hash
+    window.location.replace(window.location.pathname + "?r=" + Date.now() + "#home");
 }
 
 function openSimpleContract() {
@@ -3328,7 +3329,7 @@ function closeSigModal(){
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js?v=11").then((reg) => {
+    navigator.serviceWorker.register("./sw.js?v=12").then((reg) => {
 
       // 偵測更新
       reg.addEventListener("updatefound", () => {
