@@ -1392,7 +1392,10 @@
             <i data-lucide="badge-check" class="w-4 h-4 text-theme-brown"></i>
             乙方資訊
         </div>
-
+<div class="info-row">
+    <i data-lucide="store"></i>
+    <span><b>店家名稱：</b>Woofmen 汪們毛孩沙龍所</span>
+</div>
         <div class="info-row">
             <i data-lucide="user"></i>
             <span><b>負責人：</b>林柏伶</span>
@@ -1466,6 +1469,33 @@
             </form>
         </div>
 
+<!-- ✅ 成功頁（汪們風格） -->
+<div id="view-success" class="view-section w-full pb-16">
+    <div class="card-panel p-7 rounded-3xl text-center space-y-5">
+        <div id="success-icon-wrap" class="mx-auto w-20 h-20 rounded-full flex items-center justify-center bg-theme-yellowLight">
+            <i id="success-icon" data-lucide="check-circle-2" class="w-10 h-10 text-theme-brownDeep"></i>
+        </div>
+
+        <h2 id="success-title" class="text-2xl font-black text-theme-brownDeep">提交成功！</h2>
+
+        <div id="success-box" class="rounded-2xl p-4 text-sm text-theme-text border border-[#EAD9C9] bg-white text-left">
+            <!-- JS 動態填入 -->
+        </div>
+
+        <button onclick="openSimpleContract()"
+            class="w-full py-3 rounded-2xl submit-btn flex items-center justify-center gap-2">
+            <i data-lucide="file-text" class="w-4 h-4"></i>
+            開啟完整契約（截圖保存）
+        </button>
+
+        <button onclick="backToHomeFromSuccess()"
+            class="w-full py-3 rounded-2xl bg-white border-2 border-[#EAD9C9] text-theme-text font-bold flex items-center justify-center gap-2">
+            <i data-lucide="home" class="w-4 h-4"></i>
+            返回首頁（完成）
+        </button>
+    </div>
+</div>
+
     </main>
     <!-- ✅ 舊客資料選擇彈窗 -->
 <div id="old-customer-modal" class="oldcust-modal">
@@ -1502,7 +1532,459 @@
     const SUPABASE_URL = 'https://thpjafkziebaklzpwooo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRocGphZmt6aWViYWtsenB3b29vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzU1MTUsImV4cCI6MjA4NzgxMTUxNX0.wJE3B53IeejPs9tVEljr-g0obYFCt671Hjkr4_xMREo';
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// ✅ 汪們寄信設定
+const SHOP_EMAIL = "woofmenpetsalon888@gmail.com";
+const RESEND_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/resend-email`;
 
+// ✅ 成功頁與預覽用
+let lastContractData = null;
+
+function escapeHtml(str = "") {
+    return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function showSuccessPage(contractData) {
+    lastContractData = contractData;
+    switchView("success");
+
+    const title = document.getElementById("success-title");
+    const box = document.getElementById("success-box");
+
+    const ownerEmail = (contractData?.owner_email || "").trim();
+
+    if (ownerEmail) {
+        title.textContent = "副本已寄出";
+        box.innerHTML = `
+            <div class="font-bold text-theme-brownDeep mb-2">📩 契約副本已發送至您的信箱</div>
+            <div class="text-[13px] leading-6">
+                <span class="font-bold">收件信箱：</span>
+                <span class="inline-block px-2 py-0.5 rounded-md bg-theme-yellowLight border border-[#EAD9C9] font-bold">
+                    ${escapeHtml(ownerEmail)}
+                </span>
+            </div>
+            <div class="mt-3 text-[12px] text-theme-sub">
+                建議您仍可點擊下方按鈕，開啟完整契約進行截圖備份。
+            </div>
+        `;
+    } else {
+        title.textContent = "提交成功（未填信箱）";
+        box.innerHTML = `
+            <div class="font-bold text-red-500 mb-2">⚠ 您未填寫 Email</div>
+            <div class="text-[13px] leading-6">
+                請點擊下方按鈕開啟完整契約，截圖保存。
+            </div>
+        `;
+    }
+
+    lucide.createIcons();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function backToHomeFromSuccess() {
+    switchView("home");
+}
+
+function openSimpleContract() {
+    if (!lastContractData) {
+        alert("找不到契約資料");
+        return;
+    }
+    const html = generateWoofmenContractHTML(lastContractData);
+    const w = window.open("", "_blank");
+    if (!w) {
+        alert("彈出視窗被阻擋，請允許後再試");
+        return;
+    }
+    w.document.write(html);
+    w.document.close();
+}
+
+function getCleanTermsHTML() {
+    const el = document.getElementById("terms-content");
+    if (!el) return "<p>（條款內容未載入）</p>";
+
+    const clone = el.cloneNode(true);
+
+    // 移除你指定不顯示的提示
+    clone.querySelectorAll(".terms-subtitle, .terms-footer-tip").forEach(n => n.remove());
+
+    // 保險：若文字還存在也清掉
+    clone.querySelectorAll("*").forEach(node => {
+        const txt = (node.textContent || "").trim();
+        if (
+            txt === "請務必完整閱讀，滑至底部可解鎖同意" ||
+            txt === "※ 請滑到底部才能點選同意"
+        ) {
+            node.remove();
+        }
+    });
+
+    return clone.innerHTML;
+}
+
+function formatMulti(v) {
+    if (!v) return "無";
+    if (Array.isArray(v)) return v.filter(Boolean).join("、") || "無";
+    return String(v).trim() || "無";
+}
+
+function generateWoofmenContractHTML(d) {
+    const safe = (v) => (v === undefined || v === null || v === "" ? "-" : String(v));
+    const age = d.age_year ? `${d.age_year} 歲` : (d.age_month ? `${d.age_month} 個月` : "-");
+    const termsHtml = getCleanTermsHTML();
+    const logoUrl = "https://thpjafkziebaklzpwooo.supabase.co/storage/v1/object/public/logo/logo.png";
+
+    return `
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Woofmen 汪們｜完整契約副本</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f8f5f2;
+  --paper:#fffdfa;
+  --ink:#6f5848;
+  --muted:#9b8b80;
+  --gold:#c9aa87;
+  --line:#eee4da;
+  --accent:#a68a7c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(circle at 10% 10%, rgba(201,170,135,.12), transparent 36%),
+    radial-gradient(circle at 90% 80%, rgba(166,138,124,.08), transparent 42%),
+    var(--bg);
+  color:var(--ink);
+  font-family:"Zen Maru Gothic","Noto Sans TC",sans-serif;
+  line-height:1.75;
+  padding:34px 16px;
+}
+.book{
+  max-width:920px;
+  margin:0 auto;
+  background:var(--paper);
+  border-radius:22px;
+  box-shadow:0 22px 50px rgba(73,46,28,.10);
+  overflow:hidden;
+}
+
+/* Cover */
+.cover{
+  padding:32px 30px 26px;
+  position:relative;
+  background:
+    linear-gradient(120deg, rgba(255,255,255,.85), rgba(255,255,255,.65)),
+    linear-gradient(135deg, rgba(166,138,124,.16), rgba(230,200,138,.18));
+}
+.cover:after{
+  content:"";
+  position:absolute; left:30px; right:30px; bottom:0;
+  border-bottom:1px solid rgba(166,138,124,.25);
+}
+.brand-row{display:flex;align-items:center;gap:14px}
+.logo{
+  width:58px;height:58px;object-fit:contain;filter: drop-shadow(0 4px 8px rgba(0,0,0,.08));
+}
+.brand{
+  margin:0;
+  font-family:"Noto Serif TC",serif;
+  font-weight:700;
+  letter-spacing:.04em;
+  font-size:28px;
+  color:#6a5243;
+}
+.sub{
+  margin-top:2px;
+  font-size:11px;
+  letter-spacing:.24em;
+  color:#8f7d71;
+  font-weight:700;
+}
+.doc-meta{
+  margin-top:16px;
+  display:flex;gap:10px;flex-wrap:wrap;
+}
+.meta-pill{
+  font-size:11px;
+  color:#7f6a5b;
+  border:1px solid rgba(166,138,124,.28);
+  background:rgba(255,255,255,.7);
+  border-radius:999px;
+  padding:4px 10px;
+  letter-spacing:.08em;
+  font-weight:700;
+}
+
+/* Content */
+.content{padding:20px 30px 30px}
+.section{
+  padding:18px 0 16px;
+  border-bottom:1px solid var(--line);
+}
+.section:last-child{border-bottom:none;padding-bottom:8px}
+.sec-head{
+  display:flex;align-items:baseline;gap:10px;margin-bottom:10px;
+}
+.sec-no{
+  font-size:11px;
+  letter-spacing:.16em;
+  color:#b19174;
+  font-weight:800;
+}
+.sec-title{
+  margin:0;
+  font-family:"Noto Serif TC",serif;
+  font-size:18px;
+  color:#765f50;
+  font-weight:700;
+  letter-spacing:.03em;
+}
+
+.kv{
+  display:grid;
+  grid-template-columns:150px 1fr;
+  gap:10px 12px;
+  padding:6px 0;
+}
+.k{
+  color:#9a877a;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.04em;
+}
+.v{
+  color:#6f5848;
+  font-size:14px;
+  word-break:break-word;
+}
+.v.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
+
+/* signature */
+.signature{
+  margin-top:8px;
+  padding:14px 16px;
+  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(250,245,240,.65));
+  border-radius:14px;
+}
+.sig-img{
+  max-width:240px;
+  display:block;
+  margin-top:8px;
+}
+.time{
+  margin-top:8px;
+  font-size:12px;
+  color:#8e7e72;
+  font-weight:700;
+}
+
+/* terms (保留內容，改成型錄語氣) */
+.terms-wrap{margin-top:10px}
+.terms-wrap .terms-hero{
+  background:transparent;
+  border:none;
+  box-shadow:none;
+  padding:0;
+  text-align:left;
+  margin-bottom:12px;
+}
+.terms-wrap .terms-title{
+  font-family:"Noto Serif TC",serif;
+  font-size:17px;
+  color:#765f50;
+}
+.terms-wrap .terms-subtitle{display:none!important;}
+.terms-wrap .terms-section{
+  border:none;
+  background:transparent;
+  box-shadow:none;
+  border-radius:0;
+  padding:0;
+  margin:14px 0 0;
+}
+.terms-wrap .terms-section-head{
+  margin-bottom:8px;
+}
+.terms-wrap .terms-chip{
+  background:#f3e8dc;
+  border:1px solid #ead9c9;
+  color:#8d6e63;
+}
+.terms-wrap .terms-section-head h3{
+  margin:0;
+  font-size:14px;
+  color:#7a6253;
+}
+.terms-wrap .terms-article{
+  border:none;
+  background:rgba(255,255,255,.75);
+  border-radius:10px;
+  padding:10px 12px;
+  margin-top:8px;
+}
+.terms-wrap .terms-article h4{
+  margin:0 0 5px;
+  color:#876f60;
+  font-size:13px;
+}
+.terms-wrap .terms-list{
+  margin:0 0 0 18px;
+  font-size:12px;
+  line-height:1.65;
+}
+.terms-wrap .terms-sublist{margin-top:6px}
+.terms-wrap .terms-text{font-size:12px;line-height:1.65}
+.terms-wrap .terms-warning,
+.terms-wrap .terms-note{
+  margin-top:7px;
+  border-radius:8px;
+  padding:7px 9px;
+  font-size:12px;
+}
+.terms-wrap .terms-footer-tip{display:none!important;}
+
+@media (max-width:720px){
+  .cover{padding:24px 18px 18px}
+  .cover:after{left:18px;right:18px}
+  .content{padding:12px 18px 20px}
+  .brand{font-size:24px}
+  .sec-title{font-size:16px}
+  .kv{grid-template-columns:1fr;gap:2px}
+  .k{font-size:11px}
+  .v{font-size:14px;padding-bottom:6px;border-bottom:1px dashed #f0e7de}
+}
+</style>
+</head>
+<body>
+  <article class="book">
+
+    <header class="cover">
+      <div class="brand-row">
+        <img class="logo" src="${logoUrl}" alt="Woofmen Logo">
+        <div>
+          <h1 class="brand">Woofmen 汪們</h1>
+          <div class="sub">GROOMING CONTRACT ARCHIVE</div>
+        </div>
+      </div>
+      <div class="doc-meta">
+        <span class="meta-pill">毛孩美容服務契約副本</span>
+        <span class="meta-pill">數位簽署紀錄</span>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <section class="section">
+        <div class="sec-head"><span class="sec-no">01</span><h3 class="sec-title">飼主基本資料</h3></div>
+        <div class="kv"><div class="k">電子郵件</div><div class="v">${safe(d.owner_email)}</div></div>
+        <div class="kv"><div class="k">主人姓名</div><div class="v">${safe(d.owner_name)}</div></div>
+        <div class="kv"><div class="k">連絡電話</div><div class="v">${safe(d.owner_phone)}</div></div>
+        <div class="kv"><div class="k">身分證字號</div><div class="v mono">${safe(d.owner_id)}</div></div>
+        <div class="kv"><div class="k">通訊地址</div><div class="v">${safe(d.owner_address)}</div></div>
+        <div class="kv"><div class="k">緊急聯絡人</div><div class="v">${safe(d.emergency_name)}</div></div>
+        <div class="kv"><div class="k">緊急連絡電話</div><div class="v">${safe(d.emergency_phone)}</div></div>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="sec-no">02</span><h3 class="sec-title">寵物詳細資料</h3></div>
+        <div class="kv"><div class="k">寵物名字</div><div class="v">${safe(d.pet_name)}</div></div>
+        <div class="kv"><div class="k">品種</div><div class="v">${safe(d.pet_breed)}</div></div>
+        <div class="kv"><div class="k">體重 (kg)</div><div class="v">${safe(d.pet_weight)}</div></div>
+        <div class="kv"><div class="k">年齡</div><div class="v">${safe(age)}</div></div>
+        <div class="kv"><div class="k">性別</div><div class="v">${safe(d.pet_sex)}</div></div>
+        <div class="kv"><div class="k">結紮</div><div class="v">${safe(d.fix)}</div></div>
+        <div class="kv"><div class="k">晶片狀態</div><div class="v">${safe(d.chip)}</div></div>
+        <div class="kv"><div class="k">晶片號碼</div><div class="v mono">${safe(d.chip_number)}</div></div>
+        <div class="kv"><div class="k">指定醫療機構</div><div class="v">${safe(d.preferred_hospital)}</div></div>
+        <div class="kv"><div class="k">乙方指定醫院</div><div class="v">白毛動物醫院｜320桃園市中壢區青商路143號｜03 287 6687</div></div>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="sec-no">03</span><h3 class="sec-title">過往病史</h3></div>
+        <div class="kv"><div class="k">病史狀態</div><div class="v">${safe(d.history)}</div></div>
+        <div class="kv"><div class="k">病史內容</div><div class="v">${safe(d.medical_history)}</div></div>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="sec-no">04</span><h3 class="sec-title">毛孩個性與攻擊性評估</h3></div>
+        <div class="kv"><div class="k">親人</div><div class="v">${safe(d.friendly_people)}</div></div>
+        <div class="kv"><div class="k">親狗</div><div class="v">${safe(d.friendly_dog)}</div></div>
+        <div class="kv"><div class="k">攻擊性</div><div class="v">${safe(d.aggression)}</div></div>
+        <div class="kv"><div class="k">美容性情</div><div class="v">${safe(d.temperament)}</div></div>
+        <div class="kv"><div class="k">其他個性(複選)</div><div class="v">${formatMulti(d.pet_personality)}</div></div>
+        <div class="kv"><div class="k">其他個性補充</div><div class="v">${safe(d.pet_personality_other)}</div></div>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="sec-no">05</span><h3 class="sec-title">本次服務內容</h3></div>
+        <div class="kv"><div class="k">服務項目</div><div class="v">${safe(d.service)} ${d.service_other ? `（${safe(d.service_other)}）` : ""}</div></div>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="sec-no">06</span><h3 class="sec-title">預計接回時間</h3></div>
+        <div class="kv"><div class="k">接回時間</div><div class="v">${safe(d.pickup_time)}</div></div>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="sec-no">07</span><h3 class="sec-title">皮膚狀況</h3></div>
+        <div class="kv"><div class="k">皮膚狀況</div><div class="v">${safe(d.skin)}</div></div>
+        <div class="kv"><div class="k">其他說明</div><div class="v">${safe(d.skin_other)}</div></div>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="sec-no">08</span><h3 class="sec-title">需要注意的地方</h3></div>
+        <div class="kv"><div class="k">注意事項(複選)</div><div class="v">${formatMulti(d.attention_items)}</div></div>
+        <div class="kv"><div class="k">其他補充</div><div class="v">${safe(d.attention_other)}</div></div>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="sec-no">09</span><h3 class="sec-title">毛孩洗澡頻率</h3></div>
+        <div class="kv"><div class="k">洗澡頻率</div><div class="v">${safe(d.bath)}</div></div>
+        <div class="kv"><div class="k">其他說明</div><div class="v">${safe(d.bath_other)}</div></div>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="sec-no">10</span><h3 class="sec-title">其他補充</h3></div>
+        <div class="kv"><div class="k">最近去過的美容店</div><div class="v">${safe(d.last_grooming_shop)}</div></div>
+        <div class="kv"><div class="k">怎麼知道汪們</div><div class="v">${safe(d.referral_source)}</div></div>
+        <div class="kv"><div class="k">社群照片同意</div><div class="v">${safe(d.photo)}</div></div>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="sec-no">11</span><h3 class="sec-title">乙方資訊</h3></div>
+        <div class="kv"><div class="k">店家名稱</div><div class="v">Woofmen 汪們毛孩沙龍所</div></div>
+        <div class="kv"><div class="k">負責人</div><div class="v">林柏伶</div></div>
+        <div class="kv"><div class="k">聯絡電話</div><div class="v">0916‑884‑715</div></div>
+        <div class="kv"><div class="k">地址</div><div class="v">桃園市中壢區高鐵站前西路二段208號1樓</div></div>
+        <div class="kv"><div class="k">營業時間</div><div class="v">11:00‑19:00</div></div>
+      </section>
+
+      <section class="section">
+        <div class="sec-head"><span class="sec-no">12</span><h3 class="sec-title">美容條款與簽名</h3></div>
+        <div class="terms-wrap">${termsHtml}</div>
+        <div class="signature">
+          ${d.signature_url ? `<img class="sig-img" src="${d.signature_url}" alt="signature">` : "無簽名圖"}
+          <div class="time">簽署時間：${safe(d.signed_at)}</div>
+        </div>
+      </section>
+
+    </main>
+  </article>
+</body>
+</html>`;
+}
     // 輔助函式：將簽名 Base64 轉成檔案格式
     function dataURLtoBlob(dataurl) {
         const arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1];
@@ -1535,13 +2017,14 @@
 
         // ✅ 控制 NAV：Home 隱藏、Grooming 顯示
         const nav = document.getElementById('main-nav');
-        if (nav) {
-            if (viewId === 'home') {
-                nav.classList.add('hidden');
-            } else {
-                nav.classList.remove('hidden');
-            }
-        }
+if (nav) {
+    // ✅ 只有 grooming 顯示 nav，home / success 都隱藏
+    if (viewId === 'grooming') {
+        nav.classList.remove('hidden');
+    } else {
+        nav.classList.add('hidden');
+    }
+}
     }
 
     window.addEventListener("hashchange", () => {
@@ -2464,10 +2947,51 @@ const { error: dbError } = await _supabase
         medical_history: medicalHistoryText
     }]);
 
-            if (dbError) throw dbError;
+if (dbError) throw dbError;
 
-            alert('提交成功！');
-            location.reload();
+// ✅ 組契約資料（寄信 + 成功頁 + 開啟副本 都用這份）
+const signedAtText = (document.getElementById("signature-time")?.textContent || "").replace("簽署時間：", "").trim()
+    || new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei", hour12: false });
+
+const contractData = {
+    ...data,
+    medical_history: medicalHistoryText,
+    signature_url: publicUrl,
+    signed_at: signedAtText,
+    created_at: new Date().toISOString()
+};
+
+// ✅ 收件者：店家必收；有填客戶信箱就一起收
+const ownerEmail = (data.owner_email || "").trim();
+const recipients = ownerEmail ? [ownerEmail, SHOP_EMAIL] : [SHOP_EMAIL];
+
+// ✅ 寄信（不阻擋主流程）
+try {
+    const html = generateWoofmenContractHTML(contractData);
+
+    await fetch(RESEND_FUNCTION_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`
+        },
+        body: JSON.stringify({
+            to: recipients,
+            html,
+            petNames: data.pet_name || "毛孩"
+        })
+    });
+} catch (mailErr) {
+    console.error("寄信失敗：", mailErr);
+}
+
+// ✅ 顯示成功頁（汪們風格）
+showSuccessPage(contractData);
+
+// 按鈕狀態復原
+submitBtn.disabled = false;
+submitBtn.innerText = "確認並提交簽署";
         } catch (err) {
             console.error(err);
             alert('提交失敗：' + (err.message || '請檢查網路連線'));
@@ -2804,7 +3328,7 @@ function closeSigModal(){
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js?v=10").then((reg) => {
+    navigator.serviceWorker.register("./sw.js?v=11").then((reg) => {
 
       // 偵測更新
       reg.addEventListener("updatefound", () => {
