@@ -15,7 +15,13 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-            let sigPad = null;
+        let sigPad = null;
+        // 確保網頁 DOM 載入完成後，自動渲染首頁與表單的所有 Lucide 圖標
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        });
         tailwind.config = { 
             theme: {
                 extend: {
@@ -112,7 +118,7 @@
   }
 
   .pill-option { @apply inline-flex items-center cursor-pointer; }
-  .pill-option input { @apply absolute opacity-0 pointer-events-none; }
+  .pill-option input { @apply absolute opacity-0; z-index: -1; width: 1px; height: 1px; }
   .pill-option span {
     @apply inline-flex items-center justify-center px-3 py-1 rounded-full 
            border border-[#E6D7CB] bg-white text-[#7C604E] text-[13px] 
@@ -808,15 +814,15 @@
                     <i data-lucide="chevron-right" class="w-4 h-4 text-gray-300 group-hover:text-[#06C755]"></i>
                 </a>
 
-                <a href="https://www.instagram.com/woofmen.petsalon?igsh=MXcydGNnbGxqaDh5bg%3D%3D&utm_source=qr" target="_blank" class="btn-card flex items-center p-4 rounded-2xl group reveal-item" style="animation-delay:0.6s;">
-                    <div class="w-10 h-10 rounded-full bg-pink-100 text-pink-500 flex items-center justify-center mr-4 group-hover:bg-pink-500 group-hover:text-white transition-colors duration-300">
-                        <i data-lucide="instagram" class="w-5 h-5"></i>
+                <a href="https://www.instagram.com/woofmen.petsalon?igsh=MXcydGNnbGxqaDh5bg%3D%3D&utm_source=qr" target="_blank" class="btn-card flex items-center p-4 rounded-2xl group reveal-item hover:border-pink-400/40 transition-all duration-300" style="animation-delay:0.6s;">
+                    <div class="w-10 h-10 rounded-full bg-pink-50 text-pink-500 flex items-center justify-center mr-4 group-hover:bg-gradient-to-tr group-hover:from-[#f9ce34] group-hover:via-[#ee2a7b] group-hover:to-[#6228d7] group-hover:text-white transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
                     </div>
                     <div class="flex-1">
                         <span class="block text-xs font-bold text-theme-sub tracking-widest uppercase mb-0.5">Social Media</span>
                         <span class="block text-sm font-bold text-theme-text group-hover:text-pink-500 transition-colors">追蹤 Instagram 官方帳號</span>
                     </div>
-<i data-lucide="chevron-right" class="w-4 h-4 text-gray-300 group-hover:text-pink-500"></i>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-gray-300 group-hover:text-pink-500 transition-transform group-hover:translate-x-1"></i>
                 </a>
 
                 <a href="https://maps.google.com/?q=桃園市中壢區高鐵站前西路二段208號1樓" target="_blank" class="btn-card flex items-center p-4 rounded-2xl group reveal-item" style="animation-delay:0.8s;">
@@ -1111,12 +1117,16 @@
         <div>
 <div class="flex gap-3 flex-wrap">
     <label class="pill-option">
-        <input type="radio" name="friendly_people" value="親人" required>
+        <input type="radio" name="friendly_people" value="親人" required oninvalid="this.setCustomValidity('請選擇毛孩是否「親人」')" oninput="this.setCustomValidity('')">
         <span>親人</span>
     </label>
     <label class="pill-option">
         <input type="radio" name="friendly_people" value="不親人">
         <span>不親人</span>
+    </label>
+    <label class="pill-option">
+        <input type="radio" name="friendly_people" value="不確定">
+        <span>不確定</span>
     </label>
 </div>
         </div>
@@ -1124,12 +1134,16 @@
 <div id="dog-social">
 <div class="flex gap-3 flex-wrap">
     <label class="pill-option">
-        <input type="radio" name="friendly_dog" value="親狗" required>
+        <input type="radio" name="friendly_dog" value="親狗" required oninvalid="this.setCustomValidity('請選擇毛孩是否「親狗」')" oninput="this.setCustomValidity('')">
         <span>親狗</span>
     </label>
     <label class="pill-option">
         <input type="radio" name="friendly_dog" value="不親狗">
         <span>不親狗</span>
+    </label>
+    <label class="pill-option">
+        <input type="radio" name="friendly_dog" value="不確定">
+        <span>不確定</span>
     </label>
 </div>
 </div>
@@ -1399,10 +1413,6 @@
         <div class="info-row">
             <i data-lucide="user"></i>
             <span><b>負責人：</b>林柏伶</span>
-        </div>
-        <div class="info-row">
-            <i data-lucide="phone"></i>
-            <span><b>聯絡電話：</b>0916‑884‑715</span>
         </div>
         <div class="info-row">
             <i data-lucide="map-pin"></i>
@@ -3329,7 +3339,7 @@ function closeSigModal(){
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js?v=12").then((reg) => {
+    navigator.serviceWorker.register("./sw.js?v=13").then((reg) => {
 
       // 偵測更新
       reg.addEventListener("updatefound", () => {
